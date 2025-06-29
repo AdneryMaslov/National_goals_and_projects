@@ -1,0 +1,242 @@
+/* --- Общие стили и переменные --- */
+:root {
+    --primary-color: #005bff;
+    --primary-hover-color: #0049c7;
+    --text-color: #333;
+    --light-text-color: #666;
+    --background-color: #f4f7f9;
+    --container-background: #fff;
+    --border-color: #dde3e9;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --font-family: 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+}
+
+/* --- Сбрасываем отступы и настраиваем box-sizing --- */
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+}
+
+body {
+    font-family: var(--font-family);
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+/* --- Основной контейнер приложения (НА ВЕСЬ ЭКРАН) --- */
+.App {
+    width: 100%;
+    min-height: 100vh; /* Минимальная высота равна высоте экрана */
+    background-color: var(--container-background);
+    
+    /* Важно, чтобы внутренние отступы не создавали прокрутку */
+    box-sizing: border-box; 
+    padding: 2rem;
+}
+
+/* --- Типографика --- */
+h1, h2, h3, h4 {
+    color: var(--text-color);
+    margin-top: 0;
+}
+
+h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+h2 {
+    font-size: 1.5rem;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1.5rem;
+    margin-top: 2rem;
+}
+
+h3 {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+h4 {
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+    color: var(--light-text-color);
+}
+
+p, li {
+    line-height: 1.6;
+}
+
+/* --- Элементы форм (выбор региона, цели) --- */
+select, button {
+    font-family: var(--font-family);
+    font-size: 1rem;
+    padding: 0.6rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background-color: #fff;
+}
+
+select {
+    min-width: 250px;
+}
+
+button {
+    background-color: var(--primary-color);
+    color: white;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.2s ease;
+}
+
+button:hover {
+    background-color: var(--primary-hover-color);
+}
+
+.goal-project-selector div {
+    margin-bottom: 1rem;
+}
+
+.goal-project-selector label {
+    margin-right: 1rem;
+    font-weight: 500;
+}
+
+/* --- Стили таблицы с показателями --- */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1.5rem;
+    table-layout: fixed;
+}
+
+thead {
+    background-color: #f9fafb;
+}
+
+th, td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+}
+
+th {
+    font-weight: 600;
+    color: var(--light-text-color);
+}
+
+/* --- Цветовое кодирование текста --- */
+.text-red {
+    color: var(--danger-color);
+    font-weight: 600;
+}
+
+.text-green {
+    color: var(--success-color);
+    font-weight: 600;
+}
+
+/* --- Контейнер для графика --- */
+.graph-container {
+    margin-top: 20px;
+    padding: 20px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: #fdfdfd;
+}
+
+/* --- Стили для блока с бюджетом и мероприятиями --- */
+.budget-display div {
+    padding: 0.5rem;
+    border-left: 4px solid var(--border-color);
+    margin-bottom: 0.5rem;
+}
+
+.measures-display ul {
+    padding-left: 20px;
+}
+
+.measures-display li {
+    margin-bottom: 0.5rem;
+}
+
+/* --- Стили для пошагового интерфейса --- */
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 1rem;
+}
+
+.reset-button {
+    background-color: var(--light-text-color);
+}
+
+.reset-button:hover {
+    background-color: var(--text-color);
+}
+
+.step-container, .information-container {
+    padding: 2rem;
+    background-color: #fdfdfd;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+}
+
+.info-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #eee;
+}
+
+.info-header p {
+    margin: 0.5rem 0;
+    font-size: 1.1rem;
+}
+
+/* --- Стили для адаптивной таблицы --- */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto; /* Добавляет горизонтальную прокрутку для таблицы на маленьких экранах */
+}
+
+/* --- Стили для контейнера графика, вынесенного из таблицы --- */
+.modal-graph {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background-color: #fff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.graph-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.graph-header h5 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.close-graph-button {
+  background-color: transparent;
+  color: var(--light-text-color);
+  border: 1px solid var(--border-color);
+  padding: 0.4rem 0.8rem;
+}
+
+.close-graph-button:hover {
+  background-color: #f4f7f9;
+  color: var(--text-color);
+}
