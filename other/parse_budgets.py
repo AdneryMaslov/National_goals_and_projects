@@ -1,6 +1,6 @@
 import pandas as pd
 
-source_file = 'C:/Users/droid/Desktop/Сбер/budgets.xlsx'
+source_file = '/Users/andrey/Desktop/Сбер/budgets.xlsx'
 sheet_to_process = 'Бюджет НП 1q25'
 output_file = 'processed_budgets_with_percentage.csv'
 

@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+asyncpg
+httpx
+beautifulsoup4
+lxml
+pydantic
+pydantic-settings
+pandas

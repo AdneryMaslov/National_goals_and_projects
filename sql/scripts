@@ -1,0 +1,108 @@
+CREATE DATABASE goals_n_projects;
+
+-- ===================================================================
+-- ЧАСТЬ 1: СПРАВОЧНЫЕ ТАБЛИЦЫ (ИСПРАВЛЕННАЯ ВЕРСИЯ)
+-- ===================================================================
+
+-- Таблица 1: Справочник регионов России
+CREATE TABLE regions (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) UNIQUE NOT NULL
+);
+
+-- Таблица 2: Справочник национальных проектов
+CREATE TABLE national_projects (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) UNIQUE NOT NULL
+);
+
+-- Таблица 3: Справочник национальных целей
+CREATE TABLE national_goals (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) UNIQUE NOT NULL
+);
+
+-- Таблица 4: Справочник индикаторов и их неизменных свойств
+CREATE TABLE indicators (
+    id SERIAL PRIMARY KEY,
+    name TEXT UNIQUE NOT NULL,
+    unit VARCHAR(50),
+    desired_direction VARCHAR(10),
+    CONSTRAINT chk_desired_direction CHECK (desired_direction IN ('higher', 'lower'))
+);
+
+
+-- ===================================================================
+-- ЧАСТЬ 2: ТАБЛИЦЫ ДАННЫХ И СВЯЗЕЙ (ИСПРАВЛЕННАЯ ВЕРСИЯ)
+-- ===================================================================
+
+-- Таблица 5: Связь "Многие-ко-многим" между проектами и целями
+CREATE TABLE project_to_goal_mapping (
+    project_id INT,
+    goal_id INT,
+    PRIMARY KEY (project_id, goal_id),
+    FOREIGN KEY (project_id) REFERENCES national_projects(id),
+    FOREIGN KEY (goal_id) REFERENCES national_goals(id)
+);
+
+-- Таблица 6: Данные по бюджетам национальных проектов
+CREATE TABLE project_budgets (
+    id SERIAL PRIMARY KEY,
+    region_id INT,
+    project_id INT,
+    relevance_date DATE,
+    amount_allocated DECIMAL(18, 2),
+    amount_executed DECIMAL(18, 2),
+    execution_percentage FLOAT,
+    FOREIGN KEY (region_id) REFERENCES regions(id),
+    FOREIGN KEY (project_id) REFERENCES national_projects(id)
+);
+
+-- Таблица 7: Эталонные (константные) значения индикаторов по годам
+CREATE TABLE indicator_reference_values (
+    id SERIAL PRIMARY KEY,
+    indicator_id INT,
+    year INT NOT NULL,
+    reference_value DECIMAL(18, 4),
+    FOREIGN KEY (indicator_id) REFERENCES indicators(id),
+    UNIQUE (indicator_id, year)
+);
+
+-- Таблица 8: Итоговые годовые значения индикаторов по регионам (из файлов)
+CREATE TABLE indicator_yearly_values (
+    id SERIAL PRIMARY KEY,
+    indicator_id INT,
+    region_id INT,
+    year INT NOT NULL,
+    yearly_value DECIMAL(18, 4),
+    FOREIGN KEY (indicator_id) REFERENCES indicators(id),
+    FOREIGN KEY (region_id) REFERENCES regions(id),
+    UNIQUE (indicator_id, region_id, year)
+);
+
+-- Таблица 9: Фактические месячные значения индикаторов по регионам
+CREATE TABLE indicator_monthly_values (
+    id SERIAL PRIMARY KEY,
+    indicator_id INT REFERENCES indicators(id),
+    region_id INT REFERENCES regions(id),
+    value_date DATE NOT NULL,
+    measured_value DECIMAL(18, 4),
+    UNIQUE (indicator_id, region_id, value_date)
+);
+
+
+
+-- ===================================================================
+-- Очистка таблиц и индексов
+-- ===================================================================
+TRUNCATE
+    regions,
+    national_projects,
+    national_goals,
+    indicators,
+    project_to_goal_mapping,
+    project_budgets,
+    indicator_reference_values,
+    indicator_yearly_values,
+    indicator_monthly_values
+RESTART IDENTITY CASCADE;
