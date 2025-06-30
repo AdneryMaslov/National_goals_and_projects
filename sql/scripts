@@ -25,9 +25,13 @@ CREATE TABLE national_goals (
 -- Таблица 4: Справочник индикаторов и их неизменных свойств
 CREATE TABLE indicators (
     id SERIAL PRIMARY KEY,
+    goal_id INT REFERENCES national_goals(id),
     name TEXT UNIQUE NOT NULL,
     unit VARCHAR(50),
     desired_direction VARCHAR(10),
+    source_url TEXT UNIQUE,
+    periodicity VARCHAR(20),
+    last_parsed_at TIMESTAMPTZ,
     CONSTRAINT chk_desired_direction CHECK (desired_direction IN ('higher', 'lower'))
 );
 
@@ -36,51 +40,37 @@ CREATE TABLE indicators (
 -- ЧАСТЬ 2: ТАБЛИЦЫ ДАННЫХ И СВЯЗЕЙ (ИСПРАВЛЕННАЯ ВЕРСИЯ)
 -- ===================================================================
 
--- Таблица 5: Связь "Многие-ко-многим" между проектами и целями
-CREATE TABLE project_to_goal_mapping (
-    project_id INT,
-    goal_id INT,
-    PRIMARY KEY (project_id, goal_id),
-    FOREIGN KEY (project_id) REFERENCES national_projects(id),
-    FOREIGN KEY (goal_id) REFERENCES national_goals(id)
-);
-
--- Таблица 6: Данные по бюджетам национальных проектов
+-- Таблица 5: Данные по бюджетам национальных проектов
 CREATE TABLE project_budgets (
     id SERIAL PRIMARY KEY,
-    region_id INT,
-    project_id INT,
+    region_id INT REFERENCES regions(id),
+    project_id INT REFERENCES national_projects(id),
     relevance_date DATE,
     amount_allocated DECIMAL(18, 2),
     amount_executed DECIMAL(18, 2),
-    execution_percentage FLOAT,
-    FOREIGN KEY (region_id) REFERENCES regions(id),
-    FOREIGN KEY (project_id) REFERENCES national_projects(id)
+    execution_percentage FLOAT
 );
 
--- Таблица 7: Эталонные (константные) значения индикаторов по годам
+-- Таблица 6: Эталонные (константные) значения индикаторов по годам
 CREATE TABLE indicator_reference_values (
     id SERIAL PRIMARY KEY,
-    indicator_id INT,
+    indicator_id INT REFERENCES indicators(id),
     year INT NOT NULL,
     reference_value DECIMAL(18, 4),
-    FOREIGN KEY (indicator_id) REFERENCES indicators(id),
     UNIQUE (indicator_id, year)
 );
 
--- Таблица 8: Итоговые годовые значения индикаторов по регионам (из файлов)
+-- Таблица 7: Итоговые годовые значения индикаторов по регионам (из файлов)
 CREATE TABLE indicator_yearly_values (
     id SERIAL PRIMARY KEY,
-    indicator_id INT,
-    region_id INT,
+    indicator_id INT REFERENCES indicators(id),
+    region_id INT REFERENCES regions(id),
     year INT NOT NULL,
     yearly_value DECIMAL(18, 4),
-    FOREIGN KEY (indicator_id) REFERENCES indicators(id),
-    FOREIGN KEY (region_id) REFERENCES regions(id),
     UNIQUE (indicator_id, region_id, year)
 );
 
--- Таблица 9: Фактические месячные значения индикаторов по регионам
+-- Таблица 8: Фактические месячные значения индикаторов по регионам
 CREATE TABLE indicator_monthly_values (
     id SERIAL PRIMARY KEY,
     indicator_id INT REFERENCES indicators(id),
@@ -100,7 +90,6 @@ TRUNCATE
     national_projects,
     national_goals,
     indicators,
-    project_to_goal_mapping,
     project_budgets,
     indicator_reference_values,
     indicator_yearly_values,

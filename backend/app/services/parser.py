@@ -1,5 +1,3 @@
-# /app/services/parser.py (ФИНАЛЬНАЯ ВЕРСИЯ С ЕДИНЫМ КЛИЕНТОМ)
-
 import httpx
 import json
 import re
