@@ -35,12 +35,34 @@ CREATE TABLE indicators (
     CONSTRAINT chk_desired_direction CHECK (desired_direction IN ('higher', 'lower'))
 );
 
+-- Таблица 5: Справочник параметров нацпроектов
+CREATE TABLE project_parameters (
+    id SERIAL PRIMARY KEY,
+    project_id INT NOT NULL REFERENCES national_projects(id),
+    name TEXT NOT NULL,
+    unit VARCHAR(255),
+);
 
 -- ===================================================================
--- ЧАСТЬ 2: ТАБЛИЦЫ ДАННЫХ И СВЯЗЕЙ (ИСПРАВЛЕННАЯ ВЕРСИЯ)
+-- ЧАСТЬ 2: ТАБЛИЦЫ ДАННЫХ И СВЯЗЕЙ
 -- ===================================================================
 
--- Таблица 5: Данные по бюджетам национальных проектов
+-- Таблица 6: Связь "Многие-ко-многим" между Нац. Проектами и Нац. Целями
+CREATE TABLE project_to_goal_mapping (
+    project_id INT NOT NULL REFERENCES national_projects(id) ON DELETE CASCADE,
+    goal_id INT NOT NULL REFERENCES national_goals(id) ON DELETE CASCADE,
+    PRIMARY KEY (project_id, goal_id)
+);
+
+-- Таблица 7:Ключевые мероприятия НАЦПРОЕКТОВ
+CREATE TABLE project_activities (
+    id SERIAL PRIMARY KEY,
+    project_id INT NOT NULL REFERENCES national_projects(id),
+    name TEXT NOT NULL,
+    deadline TEXT
+);
+
+-- Таблица 8: Данные по бюджетам национальных проектов
 CREATE TABLE project_budgets (
     id SERIAL PRIMARY KEY,
     region_id INT REFERENCES regions(id),
@@ -51,7 +73,7 @@ CREATE TABLE project_budgets (
     execution_percentage FLOAT
 );
 
--- Таблица 6: Эталонные (константные) значения индикаторов по годам
+-- Таблица 9: Эталонные (константные) значения индикаторов по годам
 CREATE TABLE indicator_reference_values (
     id SERIAL PRIMARY KEY,
     indicator_id INT REFERENCES indicators(id),
@@ -60,7 +82,7 @@ CREATE TABLE indicator_reference_values (
     UNIQUE (indicator_id, year)
 );
 
--- Таблица 7: Итоговые годовые значения индикаторов по регионам (из файлов)
+-- Таблица 10: Итоговые годовые значения индикаторов по регионам (из файлов)
 CREATE TABLE indicator_yearly_values (
     id SERIAL PRIMARY KEY,
     indicator_id INT REFERENCES indicators(id),
@@ -70,7 +92,7 @@ CREATE TABLE indicator_yearly_values (
     UNIQUE (indicator_id, region_id, year)
 );
 
--- Таблица 8: Фактические месячные значения индикаторов по регионам
+-- Таблица 11: Фактические месячные значения индикаторов по регионам
 CREATE TABLE indicator_monthly_values (
     id SERIAL PRIMARY KEY,
     indicator_id INT REFERENCES indicators(id),
