@@ -240,3 +240,32 @@ th {
   background-color: #f4f7f9;
   color: var(--text-color);
 }
+
+/* --- Стили для новой, широкой таблицы --- */
+.indicator-display th, .indicator-display td {
+  padding: 0.75rem; /* Немного уменьшим отступы для компактности */
+  white-space: nowrap; /* Запрещаем перенос строк в ячейках */
+  text-align: right; /* Выравниваем числа по правому краю */
+}
+
+.indicator-display th:first-child, .indicator-display td:first-child {
+  text-align: left; /* Первую колонку с названием выравниваем по левому */
+  white-space: normal; /* Разрешаем перенос для длинных названий */
+}
+
+.indicator-display .text-bold {
+  font-weight: 600;
+}
+
+.indicator-display button {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem; /* Увеличиваем иконку графика */
+  padding: 0;
+  line-height: 1;
+}
+
+.indicator-display button:hover {
+  background: transparent;
+  transform: scale(1.1);
+}
