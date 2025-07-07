@@ -29,11 +29,9 @@ body {
 /* --- Основной контейнер приложения (НА ВЕСЬ ЭКРАН) --- */
 .App {
     width: 100%;
-    min-height: 100vh; /* Минимальная высота равна высоте экрана */
+    min-height: 100vh;
     background-color: var(--container-background);
-    
-    /* Важно, чтобы внутренние отступы не создавали прокрутку */
-    box-sizing: border-box; 
+    box-sizing: border-box;
     padding: 2rem;
 }
 
@@ -97,74 +95,6 @@ button:hover {
     background-color: var(--primary-hover-color);
 }
 
-.goal-project-selector div {
-    margin-bottom: 1rem;
-}
-
-.goal-project-selector label {
-    margin-right: 1rem;
-    font-weight: 500;
-}
-
-/* --- Стили таблицы с показателями --- */
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 1.5rem;
-    table-layout: fixed;
-}
-
-thead {
-    background-color: #f9fafb;
-}
-
-th, td {
-    padding: 1rem;
-    text-align: left;
-    border-bottom: 1px solid var(--border-color);
-    vertical-align: middle;
-}
-
-th {
-    font-weight: 600;
-    color: var(--light-text-color);
-}
-
-/* --- Цветовое кодирование текста --- */
-.text-red {
-    color: var(--danger-color);
-    font-weight: 600;
-}
-
-.text-green {
-    color: var(--success-color);
-    font-weight: 600;
-}
-
-/* --- Контейнер для графика --- */
-.graph-container {
-    margin-top: 20px;
-    padding: 20px;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    background-color: #fdfdfd;
-}
-
-/* --- Стили для блока с бюджетом и мероприятиями --- */
-.budget-display div {
-    padding: 0.5rem;
-    border-left: 4px solid var(--border-color);
-    margin-bottom: 0.5rem;
-}
-
-.measures-display ul {
-    padding-left: 20px;
-}
-
-.measures-display li {
-    margin-bottom: 0.5rem;
-}
-
 /* --- Стили для пошагового интерфейса --- */
 .app-header {
     display: flex;
@@ -201,71 +131,112 @@ th {
     font-size: 1.1rem;
 }
 
-/* --- Стили для адаптивной таблицы --- */
+/* --- Общие стили для таблиц --- */
 .table-responsive {
-  width: 100%;
-  overflow-x: auto; /* Добавляет горизонтальную прокрутку для таблицы на маленьких экранах */
+    width: 100%;
+    overflow-x: auto;
 }
 
-/* --- Стили для контейнера графика, вынесенного из таблицы --- */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1.5rem;
+}
+
+thead {
+    background-color: #f9fafb;
+}
+
+th, td {
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+}
+
+th {
+    font-weight: 600;
+    color: var(--light-text-color);
+}
+
+/* --- Цветовое кодирование текста --- */
+.text-red {
+    color: var(--danger-color);
+    font-weight: 600;
+}
+
+.text-green {
+    color: var(--success-color);
+    font-weight: 600;
+}
+
+/* --- Стили для контейнера графика --- */
 .modal-graph {
-  margin-top: 2rem;
-  padding: 1.5rem;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  background-color: #fff;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    margin-top: 2rem;
+    padding: 1.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: #fff;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 }
 
 .graph-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
 }
 
 .graph-header h5 {
-  margin: 0;
-  font-size: 1.2rem;
+    margin: 0;
+    font-size: 1.2rem;
 }
 
 .close-graph-button {
-  background-color: transparent;
-  color: var(--light-text-color);
-  border: 1px solid var(--border-color);
-  padding: 0.4rem 0.8rem;
+    background-color: transparent;
+    color: var(--light-text-color);
+    border: 1px solid var(--border-color);
+    padding: 0.4rem 0.8rem;
 }
 
 .close-graph-button:hover {
-  background-color: #f4f7f9;
-  color: var(--text-color);
+    background-color: #f4f7f9;
+    color: var(--text-color);
 }
 
-/* --- Стили для новой, широкой таблицы --- */
+/* --- Стили для контейнера таблицы бюджета --- */
+.budget-table-container {
+    margin-bottom: 2.5rem;
+}
+
+.budget-table-container th, .budget-table-container td {
+    white-space: nowrap;
+    text-align: right;
+}
+
+/* --- Стили для сгруппированной таблицы индикаторов --- */
+.indicator-display table {
+    /* КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: Позволяем браузеру самому управлять шириной колонок */
+    table-layout: auto;
+}
+
 .indicator-display th, .indicator-display td {
-  padding: 0.75rem; /* Немного уменьшим отступы для компактности */
-  white-space: nowrap; /* Запрещаем перенос строк в ячейках */
-  text-align: right; /* Выравниваем числа по правому краю */
+    white-space: nowrap;
+    text-align: right;
 }
 
-.indicator-display th:first-child, .indicator-display td:first-child {
-  text-align: left; /* Первую колонку с названием выравниваем по левому */
-  white-space: normal; /* Разрешаем перенос для длинных названий */
+.indicator-display th:first-child, .indicator-display td:first-child,
+.indicator-display th:nth-child(2), .indicator-display td:nth-child(2) {
+    text-align: left;
+    white-space: normal;
 }
 
 .indicator-display .text-bold {
-  font-weight: 600;
+    font-weight: 600;
 }
 
-.indicator-display button {
-  background: transparent;
-  border: none;
-  font-size: 1.5rem; /* Увеличиваем иконку графика */
-  padding: 0;
-  line-height: 1;
-}
-
-.indicator-display button:hover {
-  background: transparent;
-  transform: scale(1.1);
+.metric-name-cell {
+    font-weight: 500;
+    background-color: #f9fafb;
+    vertical-align: top;
+    border-right: 2px solid var(--border-color);
 }

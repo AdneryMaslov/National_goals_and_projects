@@ -1,4 +1,5 @@
 import React from 'react';
+import ProjectBudgetTable from './ProjectBudgetTable';
 import IndicatorDisplay from './IndicatorDisplay';
 import MeasuresDisplay from './MeasuresDisplay';
 
@@ -19,7 +20,13 @@ const InformationDisplay = ({ regionName, goalName, project }) => {
         <p><strong>В рамках нац. цели:</strong> {goalName}</p>
       </div>
       
-      <IndicatorDisplay indicators={project.indicators} />
+      {/* Первая таблица: Бюджет */}
+      <ProjectBudgetTable budget={project.budget} />
+
+      {/* Вторая таблица: Индикаторы */}
+      <IndicatorDisplay metrics={project.metrics} />
+      
+      {/* Мероприятия */}
       <MeasuresDisplay measures={project.measures} />
     </div>
   );
