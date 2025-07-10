@@ -1,39 +1,77 @@
 import React from 'react';
 import { Line } from 'react-chartjs-2';
 import {
-  Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend,
+  Chart as ChartJS,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  TimeScale,
+  TimeSeriesScale,
 } from 'chart.js';
+import 'chartjs-adapter-date-fns'; // Важно для корректной работы временной оси
 
 ChartJS.register(
-  CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  TimeScale,
+  TimeSeriesScale
 );
 
-// Компонент теперь принимает данные и заголовок через пропсы
 const LineChart = ({ chartData, title }) => {
+  // Проверка на случай, если данные некорректны
+  if (!chartData || !chartData.datasets) {
+    return <p>Нет данных для отображения графика.</p>;
+  }
+
   const options = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       legend: {
         position: 'top',
       },
       title: {
-        display: true,
-        text: title, // Используем переданный заголовок
+        display: !!title,
+        text: title,
+      },
+      tooltip: {
+        mode: 'index',
+        intersect: false,
       },
     },
-  };
-  
-  // Добавляем стили к данным
-  const styledChartData = {
-    ...chartData,
-    datasets: chartData.datasets.map((ds, index) => ({
-      ...ds,
-      borderColor: index === 0 ? 'rgb(255, 99, 132)' : 'rgb(53, 162, 235)',
-      backgroundColor: index === 0 ? 'rgba(255, 99, 132, 0.5)' : 'rgba(53, 162, 235, 0.5)',
-    }))
+    scales: {
+      x: {
+        type: 'time',
+        time: {
+          unit: 'year', // По умолчанию показываем года
+          tooltipFormat: 'dd.MM.yyyy',
+          displayFormats: {
+            month: 'MMM yyyy',
+            year: 'yyyy'
+          },
+        },
+        title: {
+          display: true,
+          text: 'Дата'
+        }
+      },
+      y: {
+        title: {
+          display: true,
+          text: 'Значение'
+        }
+      }
+    }
   };
 
-  return <Line options={options} data={styledChartData} />;
+  return <Line options={options} data={chartData} />;
 };
 
 export default LineChart;

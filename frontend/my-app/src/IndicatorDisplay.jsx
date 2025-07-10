@@ -1,41 +1,51 @@
 import React from 'react';
 
-// Вспомогательная функция для форматирования дельты
 const formatDelta = (number) => {
-  if (number === undefined || number === null) return 'N/A';
+  if (typeof number !== 'number' || isNaN(number)) {
+    return null;
+  }
   const rounded = Math.round(number * 100) / 100;
   return rounded > 0 ? `+${rounded}` : rounded;
 };
 
-// Новый вспомогательный компонент для одной строки с данными индикатора
-// Это делает основной компонент чище
-const IndicatorDataCells = ({ indicator }) => {
-  const deltaRf = indicator.regionValue - indicator.rfValue;
-  const deltaTarget = indicator.regionValue - indicator.targetValue;
-  const deltaRfIsGood = indicator.isReversed ? deltaRf < 0 : deltaRf > 0;
-  const deltaTargetIsGood = indicator.isReversed ? deltaTarget <= 0 : deltaTarget >= 0;
+const IndicatorDataCells = ({ indicator, onShowChart }) => {
+  const deltaRf = (typeof indicator.region_value === 'number' && typeof indicator.rf_value === 'number')
+    ? indicator.region_value - indicator.rf_value
+    : null;
+
+  const targetValueNumeric = parseFloat(String(indicator.target_value).replace(',', '.'));
+  const deltaTarget = (typeof indicator.region_value === 'number' && !isNaN(targetValueNumeric))
+    ? indicator.region_value - targetValueNumeric
+    : null;
+
+  const deltaRfIsGood = indicator.is_reversed ? deltaRf < 0 : deltaRf > 0;
+  const deltaTargetIsGood = indicator.is_reversed ? deltaTarget <= 0 : deltaTarget >= 0;
 
   return (
     <>
-      <td>{indicator.name}</td>
-      <td className="text-bold">{indicator.regionValue}</td>
-      <td>{indicator.rfValue}</td>
-      <td>{indicator.targetValue}</td>
-      <td className={deltaRfIsGood ? 'text-green' : 'text-red'}>{formatDelta(deltaRf)}</td>
-      <td className={deltaTargetIsGood ? 'text-green' : 'text-red'}>{formatDelta(deltaTarget)}</td>
+      <td>{indicator.name || 'Название не найдено'}</td>
+      <td className="text-bold">{indicator.region_value ?? null}</td>
+      <td>{indicator.rf_value ? indicator.rf_value.toFixed(2) : null}</td>
+      <td>{indicator.target_value ?? null}</td>
+      <td className={deltaRf === null ? '' : (deltaRfIsGood ? 'text-green' : 'text-red')}>{formatDelta(deltaRf)}</td>
+      <td className={deltaTarget === null ? '' : (deltaTargetIsGood ? 'text-green' : 'text-red')}>{formatDelta(deltaTarget)}</td>
+      <td>
+        <button className="chart-button" onClick={() => onShowChart(indicator.id, indicator.name)}>
+          График
+        </button>
+      </td>
     </>
   );
 };
 
-
-const IndicatorDisplay = ({ metrics }) => {
+const IndicatorDisplay = ({ metrics, onShowChart }) => {
   if (!metrics || metrics.length === 0) {
     return <p>Индикаторы для данного проекта не определены.</p>;
   }
 
   return (
     <div className="indicator-display">
-      <h4>Индикаторы национального проекта</h4>
+      <h4>Индикаторы национальной цели</h4>
       <div className="table-responsive">
         <table>
           <thead>
@@ -47,32 +57,27 @@ const IndicatorDisplay = ({ metrics }) => {
               <th>Цель</th>
               <th>Δ от РФ</th>
               <th>Δ от цели</th>
+              <th>Действия</th>
             </tr>
           </thead>
           <tbody>
-            {metrics.map((metric) => {
-              // Убедимся, что работаем с массивом
+            {metrics.map((metric, metricIndex) => {
               const indicators = Array.isArray(metric.indicators) ? metric.indicators : [];
-              // Явно отделяем первый индикатор от остальных
+              if (indicators.length === 0) return null;
+
               const [firstIndicator, ...restIndicators] = indicators;
 
               return (
-                <React.Fragment key={metric.name}>
-                  {/* Рендерим первую строку, если она существует */}
-                  {firstIndicator && (
-                    <tr key={`${metric.name}-${firstIndicator.name}`}>
-                      {/* Эта ячейка будет растянута на все строки своей группы */}
-                      <td rowSpan={indicators.length} className="metric-name-cell">
-                        {metric.name}
-                      </td>
-                      <IndicatorDataCells indicator={firstIndicator} />
-                    </tr>
-                  )}
-
-                  {/* Рендерим остальные строки. В них нет первой ячейки. */}
-                  {restIndicators.map((indicator) => (
-                    <tr key={`${metric.name}-${indicator.name}`}>
-                      <IndicatorDataCells indicator={indicator} />
+                <React.Fragment key={metric.name || metricIndex}>
+                  <tr key={firstIndicator.name || 0}>
+                    <td rowSpan={indicators.length} className="metric-name-cell">
+                      {metric.name}
+                    </td>
+                    <IndicatorDataCells indicator={firstIndicator} onShowChart={onShowChart} />
+                  </tr>
+                  {restIndicators.map((indicator, indicatorIndex) => (
+                    <tr key={indicator.name || indicatorIndex}>
+                      <IndicatorDataCells indicator={indicator} onShowChart={onShowChart} />
                     </tr>
                   ))}
                 </React.Fragment>

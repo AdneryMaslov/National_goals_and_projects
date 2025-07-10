@@ -122,7 +122,7 @@ async def run_diagnostic(url: str):
     print("Шаг 3: Данные от API успешно получены.")
 
     # Сохраняем ответ для ручной проверки
-    with open('api_response_diagnostic.json', 'w', encoding='utf-8') as f:
+    with open('../../backend/api_response_diagnostic.json', 'w', encoding='utf-8') as f:
         json.dump(api_data, f, ensure_ascii=False, indent=2)
     print("Полный ответ от API сохранен в 'api_response_diagnostic.json'")
 

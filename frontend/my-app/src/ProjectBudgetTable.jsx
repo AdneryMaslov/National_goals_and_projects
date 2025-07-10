@@ -1,14 +1,25 @@
 import React from 'react';
 
-// Вспомогательная функция для форматирования чисел в денежный формат
+// Вспомогательная функция для красивого отображения чисел в виде валюты
 const formatCurrency = (number) => {
-  if (number === undefined || number === null) return 'N/A';
-  return new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', minimumFractionDigits: 0 }).format(number);
+  if (typeof number !== 'number' || number === null) {
+    return 'N/A';
+  }
+  return new Intl.NumberFormat('ru-RU', {
+    style: 'currency',
+    currency: 'RUB',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(number);
 };
 
 const ProjectBudgetTable = ({ budget }) => {
-  if (!budget) return null;
+  // Если данных о бюджете нет, компонент не будет отображаться
+  if (!budget) {
+    return null;
+  }
 
+  // Рассчитываем процент исполнения
   const executionPercentage = budget.allocated > 0
     ? (budget.executed / budget.allocated * 100)
     : 0;

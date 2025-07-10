@@ -1,102 +1,142 @@
 CREATE DATABASE goals_n_projects;
 
 -- ===================================================================
--- ЧАСТЬ 1: СПРАВОЧНЫЕ ТАБЛИЦЫ (ИСПРАВЛЕННАЯ ВЕРСИЯ)
+-- ЧАСТЬ 1: ОСНОВНЫЕ СПРАВОЧНИКИ
 -- ===================================================================
 
--- Таблица 1: Справочник регионов России
+-- Справочник регионов России
 CREATE TABLE regions (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) UNIQUE NOT NULL
 );
 
--- Таблица 2: Справочник национальных проектов
-CREATE TABLE national_projects (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) UNIQUE NOT NULL
-);
-
--- Таблица 3: Справочник национальных целей
+-- Справочник национальных целей
 CREATE TABLE national_goals (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(255) UNIQUE NOT NULL
+    name TEXT UNIQUE NOT NULL
 );
 
--- Таблица 4: Справочник индикаторов и их неизменных свойств
+-- Справочник национальных проектов
+CREATE TABLE national_projects (
+    id SERIAL PRIMARY KEY,
+    name TEXT UNIQUE NOT NULL
+);
+
+
+-- ===================================================================
+-- ЧАСТЬ 2: СУЩНОСТИ, СВЯЗАННЫЕ С НАЦ. ЦЕЛЯМИ
+-- ===================================================================
+
+-- Показатели (группы) для каждой Нац. Цели
+CREATE TABLE goal_metrics (
+    id SERIAL PRIMARY KEY,
+    goal_id INT NOT NULL REFERENCES national_goals(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    UNIQUE (goal_id, name)
+);
+
+CREATE TYPE indicator_type_enum AS ENUM ('Основной', 'Дополнительный');
+
+-- Справочник индикаторов, их свойства и связи
 CREATE TABLE indicators (
     id SERIAL PRIMARY KEY,
-    goal_id INT REFERENCES national_goals(id),
+    metric_id INT NOT NULL REFERENCES goal_metrics(id) ON DELETE CASCADE,
     name TEXT UNIQUE NOT NULL,
-    unit VARCHAR(50),
-    desired_direction VARCHAR(10),
-    source_url TEXT UNIQUE,
-    periodicity VARCHAR(20),
-    last_parsed_at TIMESTAMPTZ,
-    CONSTRAINT chk_desired_direction CHECK (desired_direction IN ('higher', 'lower'))
+    unit VARCHAR(255),
+    desired_direction VARCHAR(10) CHECK (desired_direction IN ('higher', 'lower')),
+    indicator_type indicator_type_enum,
+    source_url TEXT,
+    periodicity VARCHAR(100),
+    responsible_foiv TEXT,
+    use_for_agent BOOLEAN DEFAULT FALSE,
+    last_parsed_at TIMESTAMPTZ
 );
 
--- Таблица 5: Справочник параметров нацпроектов
+
+-- ===================================================================
+-- ЧАСТЬ 3: СУЩНОСТИ, СВЯЗАННЫЕ С НАЦ. ПРОЕКТАМИ
+-- ===================================================================
+
+-- Параметры/показатели для Нац. Проектов
 CREATE TABLE project_parameters (
     id SERIAL PRIMARY KEY,
-    project_id INT NOT NULL REFERENCES national_projects(id),
+    project_id INT NOT NULL REFERENCES national_projects(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
     unit VARCHAR(255),
+    UNIQUE (project_id, name)
 );
 
+-- Ключевые мероприятия Нац. Проектов
+CREATE TABLE project_activities (
+    id SERIAL PRIMARY KEY,
+    project_id INT NOT NULL REFERENCES national_projects(id) ON DELETE CASCADE,
+    region_id INT REFERENCES regions(id) ON DELETE SET NULL,
+    title TEXT NOT NULL,         -- 'name' переименовано в 'title'
+    activity_date DATE,          -- 'deadline' переименован в 'activity_date' и изменен тип
+    link TEXT UNIQUE,            -- Новая колонка для ссылки
+    responsible_body TEXT      -- Эта колонка осталась
+);
+
+
 -- ===================================================================
--- ЧАСТЬ 2: ТАБЛИЦЫ ДАННЫХ И СВЯЗЕЙ
+-- ЧАСТЬ 4: ТАБЛИЦЫ СВЯЗЕЙ (MAPPING)
 -- ===================================================================
 
--- Таблица 6: Связь "Многие-ко-многим" между Нац. Проектами и Нац. Целями
+-- Связь "Многие-ко-многим" между Нац. Проектами и Нац. Целями
 CREATE TABLE project_to_goal_mapping (
     project_id INT NOT NULL REFERENCES national_projects(id) ON DELETE CASCADE,
     goal_id INT NOT NULL REFERENCES national_goals(id) ON DELETE CASCADE,
     PRIMARY KEY (project_id, goal_id)
 );
 
--- Таблица 7:Ключевые мероприятия НАЦПРОЕКТОВ
-CREATE TABLE project_activities (
-    id SERIAL PRIMARY KEY,
-    project_id INT NOT NULL REFERENCES national_projects(id),
-    name TEXT NOT NULL,
-    deadline TEXT
+-- Явная связь "Индикатор -> Проект"
+CREATE TABLE indicator_to_project_mapping (
+    indicator_id INT NOT NULL REFERENCES indicators(id) ON DELETE CASCADE,
+    project_id INT NOT NULL REFERENCES national_projects(id) ON DELETE CASCADE,
+    PRIMARY KEY (indicator_id, project_id)
 );
 
--- Таблица 8: Данные по бюджетам национальных проектов
+
+-- ===================================================================
+-- ЧАСТЬ 5: ТАБЛИЦЫ С ДАННЫМИ (ДИНАМИЧЕСКИЕ)
+-- ===================================================================
+
+-- Данные по бюджетам национальных проектов
 CREATE TABLE project_budgets (
     id SERIAL PRIMARY KEY,
-    region_id INT REFERENCES regions(id),
-    project_id INT REFERENCES national_projects(id),
-    relevance_date DATE,
+    region_id INT NOT NULL REFERENCES regions(id) ON DELETE CASCADE,
+    project_id INT NOT NULL REFERENCES national_projects(id) ON DELETE CASCADE,
+    relevance_date DATE NOT NULL,
     amount_allocated DECIMAL(18, 2),
     amount_executed DECIMAL(18, 2),
-    execution_percentage FLOAT
+    execution_percentage FLOAT,
+    UNIQUE(region_id, project_id, relevance_date)
 );
 
--- Таблица 9: Эталонные (константные) значения индикаторов по годам
+-- Эталонные (целевые) значения индикаторов по годам (из файла)
 CREATE TABLE indicator_reference_values (
     id SERIAL PRIMARY KEY,
-    indicator_id INT REFERENCES indicators(id),
+    indicator_id INT NOT NULL REFERENCES indicators(id) ON DELETE CASCADE,
     year INT NOT NULL,
-    reference_value DECIMAL(18, 4),
+    reference_value TEXT, -- Тип TEXT для хранения значений вроде "не менее 48"
     UNIQUE (indicator_id, year)
 );
 
--- Таблица 10: Итоговые годовые значения индикаторов по регионам (из файлов)
+-- Фактические годовые значения индикаторов (результат парсинга)
 CREATE TABLE indicator_yearly_values (
     id SERIAL PRIMARY KEY,
-    indicator_id INT REFERENCES indicators(id),
-    region_id INT REFERENCES regions(id),
+    indicator_id INT NOT NULL REFERENCES indicators(id) ON DELETE CASCADE,
+    region_id INT NOT NULL REFERENCES regions(id) ON DELETE CASCADE,
     year INT NOT NULL,
     yearly_value DECIMAL(18, 4),
     UNIQUE (indicator_id, region_id, year)
 );
 
--- Таблица 11: Фактические месячные значения индикаторов по регионам
+-- Фактические месячные значения индикаторов (результат парсинга)
 CREATE TABLE indicator_monthly_values (
     id SERIAL PRIMARY KEY,
-    indicator_id INT REFERENCES indicators(id),
-    region_id INT REFERENCES regions(id),
+    indicator_id INT NOT NULL REFERENCES indicators(id) ON DELETE CASCADE,
+    region_id INT NOT NULL REFERENCES regions(id) ON DELETE CASCADE,
     value_date DATE NOT NULL,
     measured_value DECIMAL(18, 4),
     UNIQUE (indicator_id, region_id, value_date)
