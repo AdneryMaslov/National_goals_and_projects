@@ -6,7 +6,7 @@ from tabulate import tabulate
 import datetime
 
 from app.models.models import (
-    Region, Goal, Project, ProjectDetails, BudgetData, MetricData, IndicatorData, ProjectParameter,
+    Region, Goal, Project, ProjectDetails, BudgetItem, MetricData, IndicatorData, ProjectParameter,
     ParseRequest, ParseResponse, IndicatorHistory, TimeSeriesDataPoint, ReferenceDataPoint, ProjectActivity
 )
 from app.core.database import get_db_pool
@@ -92,11 +92,30 @@ async def get_final_data(
         if not project_record:
             raise HTTPException(status_code=404, detail="Проект не найден")
 
-        budget_record = await conn.fetchrow(
-            "SELECT amount_allocated, amount_executed FROM project_budgets WHERE project_id = $1 AND region_id = $2 ORDER BY relevance_date DESC LIMIT 1",
-            project_id, region_id
-        )
-        budget_data = BudgetData(**dict(budget_record)) if budget_record else None
+        budget_data_list = []
+
+        # 2. Находим ID для Российской Федерации
+        rf_region_record = await conn.fetchrow("SELECT id, name FROM regions WHERE name ILIKE 'Российская Федерация'")
+
+        # 3. Собираем данные для РФ
+        if rf_region_record:
+            rf_budget_record = await conn.fetchrow(
+                "SELECT amount_allocated, amount_executed FROM project_budgets WHERE project_id = $1 AND region_id = $2 ORDER BY relevance_date DESC LIMIT 1",
+                project_id, rf_region_record['id']
+            )
+            if rf_budget_record:
+                budget_data_list.append(BudgetItem(name=rf_region_record['name'], **dict(rf_budget_record)))
+
+        # 4. Собираем данные для выбранного региона (если это не сама РФ)
+        if not rf_region_record or region_id != rf_region_record['id']:
+            region_record = await conn.fetchrow("SELECT name FROM regions WHERE id = $1", region_id)
+            if region_record:
+                budget_record = await conn.fetchrow(
+                    "SELECT amount_allocated, amount_executed FROM project_budgets WHERE project_id = $1 AND region_id = $2 ORDER BY relevance_date DESC LIMIT 1",
+                    project_id, region_id
+                )
+                if budget_record:
+                    budget_data_list.append(BudgetItem(name=region_record['name'], **dict(budget_record)))
 
         activities_query = """
             SELECT title, activity_date, link, responsible_body, text
@@ -154,7 +173,7 @@ async def get_final_data(
 
         return ProjectDetails(
             name=project_record['name'],
-            budget=budget_data,
+            budget=budget_data_list,  # Передаем обновленный список
             metrics=list(metrics_dict.values()),
             activities=activities,
             parameters=parameters

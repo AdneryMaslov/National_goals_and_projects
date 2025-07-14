@@ -11,7 +11,8 @@ import {
   TimeScale,
   TimeSeriesScale,
 } from 'chart.js';
-import 'chartjs-adapter-date-fns'; // Важно для корректной работы временной оси
+import 'chartjs-adapter-date-fns';
+import { ru } from 'date-fns/locale';
 
 ChartJS.register(
   LinearScale,
@@ -24,9 +25,8 @@ ChartJS.register(
   TimeSeriesScale
 );
 
-const LineChart = ({ chartData, title }) => {
-  // Проверка на случай, если данные некорректны
-  if (!chartData || !chartData.datasets) {
+const LineChart = ({ chartData, title, chartType }) => {
+  if (!chartData || !chartData.datasets || chartData.datasets.length === 0) {
     return <p>Нет данных для отображения графика.</p>;
   }
 
@@ -49,11 +49,16 @@ const LineChart = ({ chartData, title }) => {
     scales: {
       x: {
         type: 'time',
+        adapters: {
+            date: {
+                locale: ru,
+            },
+        },
         time: {
-          unit: 'year', // По умолчанию показываем года
-          tooltipFormat: 'dd.MM.yyyy',
+          unit: chartType === 'yearly' ? 'year' : 'month',
+          tooltipFormat: 'd MMMM yyyy',
           displayFormats: {
-            month: 'MMM yyyy',
+            month: "MMM ''yy",
             year: 'yyyy'
           },
         },

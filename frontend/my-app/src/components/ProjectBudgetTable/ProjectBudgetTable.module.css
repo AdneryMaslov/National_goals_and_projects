@@ -1,0 +1,34 @@
+/* --- ИЗМЕНЕНИЕ ЗДЕСЬ --- */
+/* Добавляем стили для контейнера, чтобы он выглядел как ячейка */
+.budgetTableContainer {
+  background-color: #fff;
+  padding: 0.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  height: 100%; /* Чтобы высота была одинаковой с соседним блоком */
+  display: flex;
+  flex-direction: column;
+}
+
+.budgetTableContainer h4 {
+  margin-bottom: 0.5rem;
+  color: var(--text-color);
+}
+
+.budgetTableContainer table {
+  max-width: 100%; /* Убираем ограничение по ширине */
+}
+
+/* Выравниваем числовые колонки по правому краю */
+.budgetTableContainer th:not(:first-child),
+.budgetTableContainer td:not(:first-child) {
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Первую колонку "Уровень" выравниваем по левому краю и делаем жирной */
+.budgetTableContainer th:first-child,
+.budgetTableContainer td:first-child {
+  text-align: left;
+  font-weight: 500;
+}

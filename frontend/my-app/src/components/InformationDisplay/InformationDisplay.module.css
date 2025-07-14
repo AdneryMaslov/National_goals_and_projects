@@ -1,0 +1,59 @@
+.pageContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.filtersHeader {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    background-color: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+}
+
+/* Flex используется только для этого ряда */
+.topRow {
+  display: flex;
+  gap: 0.6rem;
+  margin-bottom: 1.7rem; /* Явно создаем отступ ПОД этим рядом */
+  align-items: stretch; /* Добавлено: заставляет дочерние элементы растягиваться на одинаковую высоту */
+}
+
+/* Блоки в верхнем ряду занимают равное пространство */
+.gridBudget,
+.gridPerformers {
+  flex: 1;
+}
+
+/* У этих блоков убраны все лишние правила макета, они будут идти по потоку */
+.gridIndicators {
+  width: 100%;
+}
+.gridMeasures {
+  width: 100%;
+  margin-top: 1.5rem; /* Оставляем отступ между индикаторами и мероприятиями */
+}
+
+
+.loaderContainer {
+    padding: 2rem;
+    background-color: #fff;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.modalOverlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+.modalGraph { background-color: white; padding: 2rem; border-radius: 8px; width: 90%; max-width: 950px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); position: relative; }
+.graphHeader { margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; }
+.graphHeader h5 { margin: 0; font-size: 1.25rem; }
+.closeGraphButton { position: absolute; top: 10px; right: 15px; background: none; border: none; font-size: 1.8rem; font-weight: bold; color: var(--light-text-color); cursor: pointer; padding: 0; line-height: 1; }
+.closeGraphButton:hover { color: var(--text-color); }
+.chartToggleButtons { margin-top: 1.5rem; margin-bottom: 1.5rem; display: flex; gap: 10px; }
+.chartToggleButtons button { font-family: var(--font-family); font-size: 0.9rem; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; border: 1px solid var(--border-color); background-color: #f8f9fa; color: var(--text-color); transition: all 0.2s ease; }
+.chartToggleButtons button:hover { border-color: #ced4da; background-color: #e9ecef; }
+.chartToggleButtons button.active { background-color: var(--primary-color); color: white; border-color: var(--primary-color); }
+.chartToggleButtons button:disabled { background-color: #e9ecef; color: #adb5bd; cursor: not-allowed; border-color: #dee2e6; }
+.chartContainer { position: relative; height: 500px; width: 100%; }

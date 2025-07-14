@@ -1,0 +1,133 @@
+.indicatorDisplay {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1.5rem;
+    background-color: #fff;
+    position: relative; /* Необходимо для позиционирования дочерних элементов */
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.header h4 {
+    margin: 0;
+    color: var(--text-color);
+}
+
+.tableWrapper {
+  position: relative;
+  transition: max-height 0.5s ease-in-out;
+  overflow: hidden;
+}
+
+.collapsed {
+  max-height: 280px;
+}
+
+.showMoreOverlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 120px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(232, 245, 253, 0.8) 50%, rgba(206, 231, 247, 1));
+  cursor: pointer;
+}
+
+.showMoreText,
+.toggleButton {
+  font-weight: 600;
+  color: var(--primary-color);
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 0.6rem 1.2rem;
+  border-radius: 20px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  transition: all 0.2s ease;
+  border: 1px solid #cde7f7;
+  cursor: pointer;
+  min-width: 250px;
+  display: inline-block;
+  text-align: center;
+}
+
+.showMoreOverlay:hover .showMoreText,
+.toggleButton:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    background-color: white;
+}
+
+.collapseButtonWrapper {
+    text-align: center;
+    padding-top: 1rem;
+    padding-bottom: 2rem;
+    margin-bottom: -2rem;
+    position: relative;
+    z-index: 2;
+    cursor: pointer;
+}
+
+.collapseButtonWrapper::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0), #e8f5fd 80%);
+    z-index: -1;
+    pointer-events: none;
+}
+
+
+/* --- Стили для таблицы --- */
+
+/* ИЗМЕНЕНИЕ ЗДЕСЬ: Задаем цвет для всех заголовков в этой таблице */
+.indicatorDisplay th {
+    color: var(--text-color);
+    font-weight: 600;
+}
+
+.metricNameCell {
+    font-weight: 500;
+    background-color: #f9fafb;
+    vertical-align: top;
+    border-right: 2px solid var(--border-color);
+    text-align: left;
+}
+
+.unitCell {
+    text-align: center;
+}
+
+.indicatorDisplay th:nth-of-type(n+4):not(:last-of-type),
+.indicatorDisplay td:nth-of-type(n+4):not(:last-of-type) {
+  text-align: right;
+}
+
+.indicatorDisplay th:last-of-type,
+.indicatorDisplay td:last-of-type {
+  text-align: center;
+}
+
+.chartButton {
+    background-color: #e9ecef;
+    color: var(--text-color);
+    padding: 0.3rem 0.8rem;
+    font-size: 0.9rem;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.chartButton:hover {
+    background-color: #dee2e6;
+}

@@ -33,7 +33,8 @@ class Project(BaseModel):
     class Config:
         from_attributes = True
 
-class BudgetData(BaseModel):
+class BudgetItem(BaseModel):
+    name: str
     allocated: Optional[float] = None
     executed: Optional[float] = None
 
@@ -53,13 +54,6 @@ class MetricData(BaseModel):
 class ProjectParameter(BaseModel):
     name: str
     unit: Optional[str] = None
-
-class ProjectDetails(BaseModel):
-    name: str
-    budget: Optional[BudgetData] = None
-    metrics: List[MetricData]
-    activities: List[str]
-    parameters: List[ProjectParameter]
 
 # ----- ОБНОВЛЕННЫЕ МОДЕЛИ ДЛЯ ГРАФИКА -----
 
@@ -83,11 +77,11 @@ class ProjectActivity(BaseModel):
     activity_date: Optional[datetime.date] = None
     link: Optional[str] = None
     responsible_body: Optional[str] = None
-    text: Optional[str] = None # <-- УБЕДИТЕСЬ, ЧТО ЭТА СТРОКА ЕСТЬ
+    text: Optional[str] = None
 
 class ProjectDetails(BaseModel):
     name: str
-    budget: Optional[BudgetData] = None
+    budget: List[BudgetItem]
     metrics: List[MetricData]
     activities: List[ProjectActivity]
     parameters: List[ProjectParameter]

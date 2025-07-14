@@ -1,0 +1,83 @@
+.selectorWrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--light-text-color);
+}
+
+.inputContainer {
+  position: relative;
+}
+
+.input {
+  font-family: var(--font-family);
+  font-size: 1rem;
+  padding: 0.6rem 2.5rem 0.6rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background-color: #fff;
+  min-width: 250px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ИЗМЕНЕНИЕ: Стилизуем плейсхолдер */
+.input::placeholder {
+  color: #aaa; /* Цвет для стандартного плейсхолдера ("-- Выберите --") */
+  opacity: 1; /* Убираем прозрачность в Firefox */
+}
+
+/* Когда значение выбрано, делаем текст плейсхолдера черным */
+.input.hasValue::placeholder {
+  color: var(--text-color);
+  opacity: 1;
+}
+
+
+.arrow {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--light-text-color);
+  pointer-events: none;
+}
+
+.optionsList {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: white;
+  border: 1px solid var(--border-color);
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  max-height: 250px;
+  overflow-y: auto;
+  z-index: 100;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.optionItem {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.optionItem:hover {
+  background-color: #f0f5ff;
+}
+
+.noOptions {
+  padding: 0.75rem 1rem;
+  color: var(--light-text-color);
+}

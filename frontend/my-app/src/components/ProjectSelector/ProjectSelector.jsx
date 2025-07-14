@@ -1,4 +1,5 @@
 import React from 'react';
+import styles from './ProjectSelector.module.css';
 
 const ProjectSelector = ({ projects, selectedProject, onProjectSelect }) => {
   const handleSelect = (e) => {
@@ -8,9 +9,14 @@ const ProjectSelector = ({ projects, selectedProject, onProjectSelect }) => {
   };
 
   return (
-    <div className="selector-wrapper">
-      <label>Нац. проект:</label>
-      <select value={selectedProject?.id || ''} onChange={handleSelect}>
+    <div className={styles.selectorWrapper}>
+      <label className={styles.label} htmlFor="project-select">Нац. проект:</label>
+      <select
+        id="project-select"
+        className={styles.selectElement}
+        value={selectedProject?.id || ''}
+        onChange={handleSelect}
+      >
         <option value="" disabled>-- Выберите нац. проект --</option>
         {projects.map(project => (
           <option key={project.id} value={project.id}>

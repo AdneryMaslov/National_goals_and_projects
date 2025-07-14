@@ -1,0 +1,63 @@
+.App {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background-color: var(--background-color);
+}
+
+.mainAppHeader {
+  background-color: #0a3056;
+  color: white;
+  /* Изменяем padding и задаем фиксированную высоту */
+  padding: 0 2rem;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  z-index: 10;
+}
+
+.logoTitleWrapper {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    cursor: pointer;
+    border-radius: 4px; /* Для визуального эффекта фокуса */
+    padding: 0.25rem;
+    margin: -0.25rem; /* Компенсируем padding */
+    outline: none;
+    height: 100%; /* Обертка теперь занимает всю высоту шапки */
+}
+
+.logoTitleWrapper:focus-visible {
+    box-shadow: 0 0 0 2px var(--container-background); /* Подсветка при фокусе с клавиатуры */
+}
+
+.logo {
+  height: 121%; /* Логотип занимает всю высоту обертки */
+  width: auto;
+  object-fit: contain; /* Сохраняет пропорции изображения */
+  padding: 0.5rem 0; /* Добавляем небольшой вертикальный отступ, чтобы лого не прилипало к краям */
+  box-sizing: border-box; /* Учитываем padding в расчете высоты */
+}
+.appTitle {
+  font-size: 1.5rem;
+  margin: 0;
+  color: white;
+}
+
+.mainContent {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 2rem;
+}
+
+.stepContainer {
+    padding: 2rem;
+    background-color: #fff;
+    border-radius: 8px;
+    max-width: 800px;
+    margin: 0 auto;
+    border: 1px solid var(--border-color);
+}

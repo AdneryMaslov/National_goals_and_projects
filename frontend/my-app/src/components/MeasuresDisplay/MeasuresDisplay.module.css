@@ -1,0 +1,141 @@
+/* Стили для всего блока мероприятий */
+.measuresDisplay h4 {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    color: var(--light-text-color);
+    border-top: 1px solid var(--border-color);
+    padding-top: 1.5rem;
+}
+
+.measuresDisplay ul {
+  list-style-type: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Стили для одного элемента списка (одной новости) */
+.measureItem {
+  background-color: #fff;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  cursor: pointer; /* Делаем весь элемент кликабельным */
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.measureItem:hover {
+    background-color: #f9fafb;
+    border-color: #cdd5de;
+}
+
+.date {
+  font-size: 0.9rem;
+  color: var(--light-text-color);
+  white-space: nowrap;
+}
+
+.title {
+  font-weight: 500;
+  margin: 0;
+  color: var(--text-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; /* Добавляет троеточие, если заголовок не влезает */
+  flex-grow: 1; /* Позволяет заголовку занимать все доступное место */
+}
+
+/* --- Стили для модального окна --- */
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: 1rem;
+}
+
+.modalContent {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 8px;
+    width: 100%;
+    max-width: 800px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    position: relative; /* <-- Важно для позиционирования крестика */
+    box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+}
+
+/* Новый стиль для кнопки-крестика */
+.closeButton {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--light-text-color);
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: color 0.2s ease;
+}
+
+.closeButton:hover {
+    color: var(--text-color);
+}
+
+.modalContent h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    padding-right: 2rem; /* Добавляем отступ, чтобы текст не заезжал под крестик */
+}
+
+.modalText {
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+    white-space: pre-line;
+    overflow-y: auto;
+    flex-grow: 1;
+}
+
+.modalActions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    border-top: 1px solid var(--border-color);
+    padding-top: 1.5rem;
+    margin-top: auto; /* Прижимает кнопки к низу */
+}
+
+/* Стили для кнопки-ссылки "Перейти к источнику" */
+.detailsLink {
+  display: inline-block;
+  text-decoration: none;
+  background-color: var(--primary-color);
+  color: white;
+  padding: 0.6rem 1rem;
+  font-size: 1rem;
+  font-weight: 500;
+  border: 1px solid var(--primary-color);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.detailsLink:hover {
+  background-color: var(--primary-hover-color);
+  border-color: var(--primary-hover-color);
+}
