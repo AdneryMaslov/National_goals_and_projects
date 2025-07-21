@@ -8,14 +8,14 @@
 .mainAppHeader {
   background-color: #0a3056;
   color: white;
-  /* Изменяем padding и задаем фиксированную высоту */
-  padding: 0 2rem;
-  height: 70px;
+  padding: 0.75rem 2rem;
   display: flex;
   align-items: center;
   flex-shrink: 0;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   z-index: 10;
+  /* --- ИЗМЕНЕНИЕ ЗДЕСЬ: Распределяем элементы по краям --- */
+  justify-content: space-between;
 }
 
 .logoTitleWrapper {
@@ -23,29 +23,35 @@
     align-items: center;
     gap: 1.5rem;
     cursor: pointer;
-    border-radius: 4px; /* Для визуального эффекта фокуса */
+    border-radius: 4px;
     padding: 0.25rem;
-    margin: -0.25rem; /* Компенсируем padding */
+    margin: -0.25rem;
     outline: none;
-    height: 100%; /* Обертка теперь занимает всю высоту шапки */
 }
 
 .logoTitleWrapper:focus-visible {
-    box-shadow: 0 0 0 2px var(--container-background); /* Подсветка при фокусе с клавиатуры */
+    box-shadow: 0 0 0 2px var(--container-background);
 }
 
 .logo {
-  height: 121%; /* Логотип занимает всю высоту обертки */
+  height: 45px;
   width: auto;
-  object-fit: contain; /* Сохраняет пропорции изображения */
-  padding: 0.5rem 0; /* Добавляем небольшой вертикальный отступ, чтобы лого не прилипало к краям */
-  box-sizing: border-box; /* Учитываем padding в расчете высоты */
 }
 .appTitle {
   font-size: 1.5rem;
   margin: 0;
   color: white;
 }
+
+/* --- ИЗМЕНЕНИЕ ЗДЕСЬ: Стили для нового текста --- */
+.creditText {
+  font-size: 0.9rem; /* Увеличен размер шрифта */
+  font-weight: 600; /* Добавлена жирность */
+  color: white;
+  opacity: 0.8; /* Немного увеличена непрозрачность для читаемости */
+  text-align: right;
+}
+
 
 .mainContent {
   flex-grow: 1;

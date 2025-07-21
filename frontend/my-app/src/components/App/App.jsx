@@ -45,12 +45,15 @@ function App() {
 
   return (
     <div className={styles.App}>
-      {/* 1. Единая шапка для всего приложения */}
       <header className={styles.mainAppHeader}>
-        {/* 2. Обертка для лого и заголовка, которая вызывает сброс по клику */}
         <div className={styles.logoTitleWrapper} onClick={handleReset} role="button" tabIndex="0">
           <img src={logo} alt="Логотип проекта" className={styles.logo} />
           <h1 className={styles.appTitle}>Анализ национальных целей</h1>
+        </div>
+
+        {/* --- ИЗМЕНЕНИЕ ЗДЕСЬ: Добавлен блок с текстом --- */}
+        <div className={styles.creditText}>
+          Проект реализован Лабораторией ИИ г. Екатеринбург
         </div>
       </header>
 
