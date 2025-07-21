@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  # 1. Сервис базы данных PostgreSQL
+  db:
+    image: postgres:15-alpine
+    container_name: db
+    restart: always
+    env_file:
+      - ./.env
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  # 2. Сервис бэкенда (FastAPI)
+  backend:
+    container_name: backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: always
+    env_file:
+      - ./.env
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+
+  # 3. Сервис фронтенда (React + Nginx)
+  frontend:
+    container_name: frontend
+    build:
+      context: ./frontend/my-app
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+# Определяем Docker Volume для хранения данных PostgreSQL
+volumes:
+  pgdata:
