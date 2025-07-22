@@ -33,6 +33,8 @@ async def connect_to_db():
     for i in range(attempts):
         print(f"Подключение к базе данных... (Попытка {i + 1}/{attempts})", flush=True)
         try:
+            print(f"✅ DB_URL - {DB_URL}", flush=True)
+
             # Пытаемся создать пул соединений
             db_pool = await asyncpg.create_pool(DB_URL, min_size=1, max_size=10, timeout=5)
             print("✅ Подключение к базе данных успешно!", flush=True)
