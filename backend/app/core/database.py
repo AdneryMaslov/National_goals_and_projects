@@ -31,20 +31,20 @@ async def connect_to_db():
     global db_pool
     attempts = 5
     for i in range(attempts):
-        print(f"Подключение к базе данных... (Попытка {i + 1}/{attempts})")
+        print(f"Подключение к базе данных... (Попытка {i + 1}/{attempts})", flush=True)
         try:
             # Пытаемся создать пул соединений
             db_pool = await asyncpg.create_pool(DB_URL, min_size=1, max_size=10, timeout=5)
-            print("✅ Подключение к базе данных успешно!")
+            print("✅ Подключение к базе данных успешно!", flush=True)
             return # Выходим из функции при успехе
         except Exception as e:
             # --- ИЗМЕНЕНИЕ ЗДЕСЬ: Исправлена опечатка с 'fa' на 'f' ---
-            print(f"⚠️ Ошибка подключения к БД: {e}")
+            print(f"⚠️ Ошибка подключения к БД: {e}", flush=True)
             if i < attempts - 1:
-                print("   Повторная попытка через 3 секунды...")
+                print("   Повторная попытка через 3 секунды...", flush=True)
                 await asyncio.sleep(3) # Ждем 3 секунды перед следующей попыткой
             else:
-                print("❌ Не удалось подключиться к базе данных после нескольких попыток.")
+                print("❌ Не удалось подключиться к базе данных после нескольких попыток.", flush=True)
                 db_pool = None
 
 async def close_db_connection():
