@@ -10,7 +10,8 @@ import GoalSelector from '../GoalSelector/GoalSelector.jsx';
 import ProjectSelector from '../ProjectSelector/ProjectSelector.jsx';
 import TopPerformers from '../TopPerformers/TopPerformers.jsx';
 
-const API_URL = 'http://127.0.0.1:8000/api';
+// const API_URL = 'http://127.0.0.1:8000/api';
+const API_URL = 'api';
 
 const InformationDisplay = ({
   regions,
