@@ -6,7 +6,8 @@ import InformationDisplay from '../InformationDisplay/InformationDisplay.jsx';
 import logo from '/logo.jpg'; // Убедитесь, что логотип в папке 'public'
 import styles from './App.module.css';
 
-const API_URL = 'http://127.0.0.1:8000/api';
+// const API_URL = 'http://127.0.0.1:8000/api';
+const API_URL = 'api';
 
 function App() {
   const [step, setStep] = useState(1);
