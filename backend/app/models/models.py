@@ -3,6 +3,7 @@
 from pydantic import BaseModel, HttpUrl
 from typing import List, Optional
 import datetime
+from datetime import date
 
 # --- Существующие модели ---
 
@@ -14,6 +15,12 @@ class ParseResponse(BaseModel):
     indicator_name: str
     monthly_rows_added: int
     yearly_rows_added: int
+
+class BudgetSyncResponse(BaseModel):
+    message: str
+    records_processed: int
+    records_added: int
+    records_updated: int
 
 class Region(BaseModel):
     id: int
@@ -78,6 +85,8 @@ class ProjectActivity(BaseModel):
     link: Optional[str] = None
     responsible_body: Optional[str] = None
     text: Optional[str] = None
+    importance: Optional[int] = None
+
 
 class ProjectDetails(BaseModel):
     name: str
@@ -85,3 +94,22 @@ class ProjectDetails(BaseModel):
     metrics: List[MetricData]
     activities: List[ProjectActivity]
     parameters: List[ProjectParameter]
+
+
+class MonthlyBudgetRecord(BaseModel):
+    relevance_date: date
+    amount_allocated: Optional[float] = None
+    amount_executed: Optional[float] = None
+
+
+class ProjectBudgetHistory(BaseModel):
+    region_data: List[MonthlyBudgetRecord]
+    rf_data: List[MonthlyBudgetRecord]
+
+class BudgetRecord(BaseModel):
+    project_name: str
+    region_name: str
+    amount_allocated: Optional[float] = None
+    amount_executed: Optional[float] = None
+    execution_percentage: Optional[float] = None
+    relevance_date: date

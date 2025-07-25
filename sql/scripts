@@ -74,7 +74,9 @@ CREATE TABLE project_activities (
     title TEXT NOT NULL,         -- 'name' переименовано в 'title'
     activity_date DATE,          -- 'deadline' переименован в 'activity_date' и изменен тип
     link TEXT UNIQUE,            -- Новая колонка для ссылки
-    responsible_body TEXT      -- Эта колонка осталась
+    responsible_body TEXT,      -- Эта колонка осталась
+    importance INTEGER,
+    last_update DATE
 );
 
 

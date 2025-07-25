@@ -32,3 +32,31 @@
   text-align: left;
   font-weight: 500;
 }
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.header h4 {
+    margin: 0;
+    color: var(--text-color);
+}
+
+.detailsButton {
+    font-family: var(--font-family);
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--primary-color);
+    background-color: transparent;
+    border: none;
+    padding: 0.5rem 0;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.detailsButton:hover {
+    color: var(--primary-hover-color);
+}

@@ -14,27 +14,26 @@
     border-radius: 8px;
 }
 
-/* Flex используется только для этого ряда */
-.topRow {
-  display: flex;
-  gap: 0.6rem;
-  margin-bottom: 1.7rem; /* Явно создаем отступ ПОД этим рядом */
-  align-items: stretch; /* Добавлено: заставляет дочерние элементы растягиваться на одинаковую высоту */
+/* --- ИЗМЕНЕНИЕ ЗДЕСЬ: Возвращаем надежную сеточную верстку --- */
+.mainGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Две равные колонки */
+  gap: 1.5rem;
 }
 
-/* Блоки в верхнем ряду занимают равное пространство */
-.gridBudget,
+.gridBudget {
+  grid-column: 1 / 2;
+}
 .gridPerformers {
-  flex: 1;
+  grid-column: 2 / 3;
 }
 
-/* У этих блоков убраны все лишние правила макета, они будут идти по потоку */
+/* Явно указываем, что нижние блоки должны занимать всю ширину */
 .gridIndicators {
-  width: 100%;
+  grid-column: 1 / -1;
 }
 .gridMeasures {
-  width: 100%;
-  margin-top: 1.5rem; /* Оставляем отступ между индикаторами и мероприятиями */
+  grid-column: 1 / -1;
 }
 
 
@@ -43,6 +42,20 @@
     background-color: #fff;
     border-radius: 8px;
     border: 1px solid var(--border-color);
+}
+
+.promptContainer {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 3rem 2rem;
+    background-color: #fff;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    text-align: center;
+    width: 80%;
+    max-width: 600px;
 }
 
 .modalOverlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; }

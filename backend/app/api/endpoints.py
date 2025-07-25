@@ -4,14 +4,18 @@ from fastapi import APIRouter, HTTPException, Query
 from typing import List, Optional
 from tabulate import tabulate
 import datetime
+import pandas as pd
 
 from app.models.models import (
     Region, Goal, Project, ProjectDetails, BudgetItem, MetricData, IndicatorData, ProjectParameter,
-    ParseRequest, ParseResponse, IndicatorHistory, TimeSeriesDataPoint, ReferenceDataPoint, ProjectActivity
+    ParseRequest, ParseResponse, IndicatorHistory, TimeSeriesDataPoint, ReferenceDataPoint, ProjectActivity,
+    BudgetSyncResponse, ProjectBudgetHistory
 )
 from app.core.database import get_db_pool
 from app.services.parser import get_indicator_data_from_url
 from app.services.db_manager import save_parsed_data
+from app.services.budget_parser import fetch_budget_data
+from app.services.db_manager import save_parsed_data, save_budget_data
 
 router = APIRouter()
 
@@ -28,17 +32,43 @@ async def process_indicator_endpoint(request: ParseRequest):
 
     print(f"Спарсены метаданные для: '{metadata['name']}'")
 
+    # -- Заглушка для проверки парсера --
+    monthly_rows_count = len(monthly_df) if monthly_df is not None else 0
+    yearly_rows_count = len(yearly_df) if yearly_df is not None else 0
+
+    print("\n--- РЕЗУЛЬТАТЫ ПАРСИНГА (без сохранения в БД) ---")
+
+    if yearly_rows_count > 0:
+        print("\n[+] Годовые данные:")
+        # Выводим первые 5 строк для предпросмотра
+        print(tabulate(yearly_df.head(), headers='keys', tablefmt='psql'))
+        if yearly_rows_count > 5:
+            print(f"... и еще {yearly_rows_count - 5} строк.")
+    else:
+        print("\n[-] Годовые данные не найдены.")
+
+    if monthly_rows_count > 0:
+        print("\n[+] Месячные данные:")
+        # Выводим первые 5 строк для предпросмотра
+        print(tabulate(monthly_df.head(), headers='keys', tablefmt='psql'))
+        if monthly_rows_count > 5:
+            print(f"... и еще {monthly_rows_count - 5} строк.")
+    else:
+        print("\n[-] Месячные данные не найдены.")
+
+    print("\n--- Конец результатов ---")
+
     # --- Возвращаем сохранение в БД ---
-    try:
-        await save_parsed_data(
-            metadata=metadata,
-            monthly_df=monthly_df,
-            yearly_df=yearly_df
-        )
-    except Exception as e:
-        # Ловим и выводим как ошибки парсинга, так и ошибки сохранения
-        print(f"Критическая ошибка: {e}")
-        raise HTTPException(status_code=500, detail=f"Ошибка обработки или сохранения: {str(e)}")
+    # try:
+    #     await save_parsed_data(
+    #         metadata=metadata,
+    #         monthly_df=monthly_df,
+    #         yearly_df=yearly_df
+    #     )
+    # except Exception as e:
+    #     # Ловим и выводим как ошибки парсинга, так и ошибки сохранения
+    #     print(f"Критическая ошибка: {e}")
+    #     raise HTTPException(status_code=500, detail=f"Ошибка обработки или сохранения: {str(e)}")
 
     return ParseResponse(
         message="Данные успешно спарсены и сохранены",
@@ -47,6 +77,37 @@ async def process_indicator_endpoint(request: ParseRequest):
         yearly_rows_added=len(yearly_df) if yearly_df is not None else 0
     )
 
+
+@router.post("/budgets/sync", response_model=BudgetSyncResponse, tags=["Parser"])
+async def sync_budgets():
+    """
+    Запускает процесс получения и сохранения данных о бюджетах национальных проектов.
+    """
+    budget_data_url = "https://parser-project-urfu.ru/parsers/iminfin/project-data/"
+
+    try:
+        # Шаг 1: Получаем данные
+        data = await fetch_budget_data(budget_data_url)
+        if not data:
+            raise HTTPException(status_code=404, detail="Данные о бюджетах не найдены по указанному URL.")
+
+        # --- ИЗМЕНЕНИЕ ЗДЕСЬ: Возвращаем сохранение в БД ---
+
+        # Шаг 2: Сохранение данных в БД
+        added, updated = await save_budget_data(data)
+
+        return BudgetSyncResponse(
+            message="Синхронизация бюджетов успешно завершена.",
+            records_processed=len(data),
+            records_added=added,
+            records_updated=updated
+        )
+
+    except Exception as e:
+        print(f"Критическая ошибка во время синхронизации бюджетов: {e}")
+        raise HTTPException(status_code=500, detail=f"Внутренняя ошибка сервера: {str(e)}")
+
+#---------------------------------------------------------------------------------------
 
 @router.get("/regions", response_model=List[Region], tags=["Data"])
 async def get_all_regions():
@@ -94,37 +155,63 @@ async def get_final_data(
 
         budget_data_list = []
 
-        # 2. Находим ID для Российской Федерации
+        # Находим ID для Российской Федерации
         rf_region_record = await conn.fetchrow("SELECT id, name FROM regions WHERE name ILIKE 'Российская Федерация'")
 
-        # 3. Собираем данные для РФ
+        # --- Логика получения бюджетов (остается без изменений) ---
         if rf_region_record:
             rf_budget_record = await conn.fetchrow(
-                "SELECT amount_allocated, amount_executed FROM project_budgets WHERE project_id = $1 AND region_id = $2 ORDER BY relevance_date DESC LIMIT 1",
-                project_id, rf_region_record['id']
+                """
+                SELECT SUM(amount_allocated) as allocated, SUM(amount_executed) as executed 
+                FROM project_budgets 
+                WHERE project_id = $1 AND region_id = $2 AND EXTRACT(YEAR FROM relevance_date) = $3
+                """,
+                project_id, rf_region_record['id'], year
             )
-            if rf_budget_record:
+            if rf_budget_record and rf_budget_record['allocated'] is not None:
                 budget_data_list.append(BudgetItem(name=rf_region_record['name'], **dict(rf_budget_record)))
 
-        # 4. Собираем данные для выбранного региона (если это не сама РФ)
         if not rf_region_record or region_id != rf_region_record['id']:
             region_record = await conn.fetchrow("SELECT name FROM regions WHERE id = $1", region_id)
             if region_record:
                 budget_record = await conn.fetchrow(
-                    "SELECT amount_allocated, amount_executed FROM project_budgets WHERE project_id = $1 AND region_id = $2 ORDER BY relevance_date DESC LIMIT 1",
-                    project_id, region_id
+                    """
+                    SELECT SUM(amount_allocated) as allocated, SUM(amount_executed) as executed 
+                    FROM project_budgets 
+                    WHERE project_id = $1 AND region_id = $2 AND EXTRACT(YEAR FROM relevance_date) = $3
+                    """,
+                    project_id, region_id, year
                 )
-                if budget_record:
+                if budget_record and budget_record['allocated'] is not None:
                     budget_data_list.append(BudgetItem(name=region_record['name'], **dict(budget_record)))
 
-        activities_query = """
-            SELECT title, activity_date, link, responsible_body, text
-            FROM project_activities
-            WHERE project_id = $1 AND region_id = $2
-            ORDER BY activity_date DESC NULLS LAST;
-        """
-        activity_records = await conn.fetch(activities_query, project_id, region_id)
+        # --- ИЗМЕНЕНИЕ ЗДЕСЬ: Логика получения новостей в зависимости от региона ---
+
+        # Определяем, является ли выбранный регион "Российская Федерация"
+        is_rf_selected = rf_region_record and region_id == rf_region_record['id']
+
+        if is_rf_selected:
+            # Если выбрана РФ, показываем новости со всех регионов для данного проекта
+            activities_query = """
+                SELECT title, activity_date, link, responsible_body, text, importance
+                FROM project_activities
+                WHERE project_id = $1
+                ORDER BY activity_date DESC NULLS LAST;
+            """
+            activity_records = await conn.fetch(activities_query, project_id)
+        else:
+            # Иначе, показываем новости только для выбранного региона
+            activities_query = """
+                SELECT title, activity_date, link, responsible_body, text, importance
+                FROM project_activities
+                WHERE project_id = $1 AND region_id = $2
+                ORDER BY activity_date DESC NULLS LAST;
+            """
+            activity_records = await conn.fetch(activities_query, project_id, region_id)
+
         activities = [ProjectActivity(**dict(rec)) for rec in activity_records]
+
+        # --- КОНЕЦ ИЗМЕНЕНИЙ ---
 
         parameter_records = await conn.fetch(
             "SELECT name, unit FROM project_parameters WHERE project_id = $1 ORDER BY id", project_id)
@@ -173,10 +260,44 @@ async def get_final_data(
 
         return ProjectDetails(
             name=project_record['name'],
-            budget=budget_data_list,  # Передаем обновленный список
+            budget=budget_data_list,
             metrics=list(metrics_dict.values()),
             activities=activities,
             parameters=parameters
+        )
+
+
+@router.get("/budgets/history", response_model=ProjectBudgetHistory, tags=["Data"])
+async def get_budget_history(project_id: int, region_id: int, year: int):
+    """
+    Возвращает помесячную историю исполнения бюджета для выбранного проекта и региона
+    за указанный год, а также данные по РФ для сравнения.
+    """
+    pool = await get_db_pool()
+    async with pool.acquire() as conn:
+        # Получаем ID РФ
+        rf_region_record = await conn.fetchrow("SELECT id FROM regions WHERE name ILIKE 'Российская Федерация'")
+        rf_region_id = rf_region_record['id'] if rf_region_record else -1
+
+        # Запрос для получения данных
+        query = """
+            SELECT relevance_date, amount_allocated, amount_executed
+            FROM project_budgets
+            WHERE project_id = $1 AND region_id = $2 AND EXTRACT(YEAR FROM relevance_date) = $3
+            ORDER BY relevance_date;
+        """
+
+        # Получаем данные для выбранного региона
+        region_records = await conn.fetch(query, project_id, region_id, year)
+
+        # Получаем данные для РФ
+        rf_records = []
+        if rf_region_id != -1:
+            rf_records = await conn.fetch(query, project_id, rf_region_id, year)
+
+        return ProjectBudgetHistory(
+            region_data=[dict(rec) for rec in region_records],
+            rf_data=[dict(rec) for rec in rf_records]
         )
 
 

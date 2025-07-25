@@ -25,7 +25,7 @@ ChartJS.register(
   TimeSeriesScale
 );
 
-const LineChart = ({ chartData, title, chartType }) => {
+const LineChart = ({ chartData, title, chartType, yAxisTitle = 'Значение' }) => {
   if (!chartData || !chartData.datasets || chartData.datasets.length === 0) {
     return <p>Нет данных для отображения графика.</p>;
   }
@@ -69,9 +69,9 @@ const LineChart = ({ chartData, title, chartType }) => {
       },
       y: {
         title: {
-          display: true,
-          text: 'Значение'
-        }
+        display: true,
+        text: yAxisTitle // Используем новый параметр
+         }
       }
     }
   };

@@ -1,10 +1,11 @@
-# app/services/db_manager.py
-
 import pandas as pd
-from typing import Optional
+from typing import Optional, List, Dict, Any, Tuple
+import re
+from datetime import date
+
 from app.core.database import get_db_pool
 from asyncpg import Connection
-import re  # 1. Импортируем модуль для регулярных выражений
+
 
 
 async def get_or_create_generic_id(conn: Connection, table_name: str, name: str, parent_id_column: str = None,
@@ -110,3 +111,91 @@ async def save_parsed_data(
                 )
 
     print(f"Обработка для индикатора '{original_indicator_name}' завершена.")
+
+
+async def save_budget_data(budget_data: List[Dict[str, Any]]) -> Tuple[int, int]:
+    """
+    Сохраняет данные о бюджетах в базу данных.
+    Автоматически создает недостающие регионы и проекты в справочниках.
+    """
+    pool = await get_db_pool()
+    if pool is None:
+        raise ConnectionError("Пул соединений с БД не инициализирован.")
+
+    added_count = 0
+    updated_count = 0
+
+    async with pool.acquire() as conn:
+        # Кэшируем ID для уменьшения количества запросов к БД
+        regions_cache = {r['name']: r['id'] for r in await conn.fetch("SELECT id, name FROM regions")}
+        projects_cache = {p['name']: p['id'] for p in await conn.fetch("SELECT id, name FROM national_projects")}
+
+        async with conn.transaction():
+            for item in budget_data:
+                region_name = item.get("region_name")
+                project_name = item.get("project_name")
+
+                if not region_name or not project_name:
+                    continue
+
+                # --- ИЗМЕНЕНИЕ ЗДЕСЬ: Форматируем название проекта, добавляя префикс и кавычки ---
+
+                # Изначально берем имя как есть
+                formatted_project_name = project_name.strip()
+
+                # Если у имени нет префикса "НП «", добавляем его
+                if not formatted_project_name.startswith('НП «'):
+                    formatted_project_name = f"НП «{formatted_project_name}»"
+
+                # --- КОНЕЦ ИЗМЕНЕНИЙ ---
+
+                # Проверяем и создаем регион, если его нет
+                region_id = regions_cache.get(region_name)
+                if not region_id:
+                    print(f"INFO: Регион '{region_name}' не найден. Создание новой записи...")
+                    region_id = await get_or_create_generic_id(conn, 'regions', region_name)
+                    regions_cache[region_name] = region_id  # Обновляем кэш
+
+                # Проверяем и создаем проект, если его нет, используя отформатированное имя
+                project_id = projects_cache.get(formatted_project_name)
+                if not project_id:
+                    print(f"INFO: Проект '{formatted_project_name}' не найден. Создание новой записи...")
+                    project_id = await get_or_create_generic_id(conn, 'national_projects', formatted_project_name)
+                    projects_cache[formatted_project_name] = project_id  # Обновляем кэш
+
+                query = """
+                    INSERT INTO project_budgets (
+                        region_id, project_id, relevance_date, 
+                        amount_allocated, amount_executed, execution_percentage
+                    ) VALUES ($1, $2, $3, $4, $5, $6)
+                    ON CONFLICT (region_id, project_id, relevance_date) 
+                    DO UPDATE SET 
+                        amount_allocated = EXCLUDED.amount_allocated,
+                        amount_executed = EXCLUDED.amount_executed,
+                        execution_percentage = EXCLUDED.execution_percentage
+                    RETURNING (xmax = 0) AS inserted;
+                """
+
+                try:
+                    relevance_date = date.fromisoformat(item['relevance_date'])
+
+                    result = await conn.fetchrow(
+                        query,
+                        region_id,
+                        project_id,
+                        relevance_date,
+                        item.get('amount_allocated'),
+                        item.get('amount_executed'),
+                        item.get('execution_percentage')
+                    )
+
+                    if result and result['inserted']:
+                        added_count += 1
+                    else:
+                        updated_count += 1
+
+                except Exception as e:
+                    print(f"Ошибка при обработке записи для {formatted_project_name} в {region_name}: {e}")
+
+    return added_count, updated_count
+

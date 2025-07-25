@@ -1,0 +1,163 @@
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: 1rem;
+}
+
+.modalContent {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 8px;
+    width: 100%;
+    /* --- ИЗМЕНЕНИЕ: Увеличиваем максимальную ширину для двух колонок --- */
+    max-width: 1200px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+}
+
+.closeButton {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--light-text-color);
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+}
+
+.header {
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 1.5rem;
+}
+
+.header h3 {
+    margin: 0;
+}
+
+/* --- НОВЫЕ СТИЛИ: Контейнер для сравнения и колонки --- */
+.comparisonContainer {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Две равные колонки */
+    gap: 2rem;
+    overflow-y: auto; /* Позволяет прокручивать контент, если он не влезает */
+    flex-grow: 1;
+}
+
+.dataColumn {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem; /* Отступ между таблицей и графиком */
+}
+/* --- КОНЕЦ НОВЫХ СТИЛЕЙ --- */
+
+
+.tableSection, .chartSection {
+    display: flex;
+    flex-direction: column;
+}
+
+.tableSection h5, .chartSection h5 {
+    margin-top: 0;
+    margin-bottom: 0.75rem;
+}
+
+.tableWrapper {
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    max-height: 250px; /* Ограничиваем высоту таблицы, чтобы она не растягивалась */
+}
+
+.tableWrapper table {
+    width: 100%;
+}
+.tableWrapper th, .tableWrapper td {
+    padding: 0.75rem;
+    text-align: right;
+}
+.tableWrapper th:first-child, .tableWrapper td:first-child {
+    text-align: left;
+}
+
+.chartContainer {
+    position: relative;
+    height: 100%;
+    min-height: 300px;
+}
+
+.tableWrapper th {
+    position: sticky;
+    top: 0;
+    /* Устанавливаем фон, чтобы текст снизу не просвечивал */
+    background-color: #f9fafb;
+    /* z-index гарантирует, что заголовок будет поверх других элементов */
+    z-index: 1;
+}
+
+.singleColumnContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem; /* Увеличим отступ между таблицей и графиком /
+    flex-grow: 1;
+    overflow-y: auto;
+    / Уберем ограничение по ширине и центрирование */
+    width: 100%;
+    margin: 0;
+}
+
+.singleColumnContainer .tableWrapper {
+/* Увеличим максимальную высоту таблицы */
+    max-height: 400px;
+}
+
+.singleColumnContainer .chartSection {
+    min-height: 400px;
+    flex-grow: 1;
+}
+
+.chartToggle {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.chartToggle button {
+    font-family: var(--font-family);
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background-color: #f8f9fa;
+    color: var(--light-text-color);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.chartToggle button:hover {
+    border-color: #ced4da;
+    background-color: #e9ecef;
+}
+
+.chartToggle button.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+    font-weight: 600;
+}

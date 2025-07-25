@@ -3,11 +3,10 @@ import RegionSelector from '../RegionSelector/RegionSelector.jsx';
 import GoalSelector from '../GoalSelector/GoalSelector.jsx';
 import ProjectSelector from '../ProjectSelector/ProjectSelector.jsx';
 import InformationDisplay from '../InformationDisplay/InformationDisplay.jsx';
-import logo from '/logo.jpg'; // Убедитесь, что логотип в папке 'public'
+import logo from '/logo.jpg';
 import styles from './App.module.css';
 
-// const API_URL = 'http://127.0.0.1:8000/api';
-const API_URL = 'api';
+const API_URL = '/api';
 
 function App() {
   const [step, setStep] = useState(1);
@@ -27,22 +26,97 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (selectedRegion) { const fetchGoals = async () => { try { const response = await fetch(`${API_URL}/goals`); if (!response.ok) throw new Error('Ошибка загрузки нац. целей'); const data = await response.json(); setGoals(data); setStep(2); } catch (error) { console.error(error); } }; fetchGoals(); }
-  }, [selectedRegion]);
+    if (selectedRegion) {
+      const fetchGoals = async () => {
+        try {
+          const response = await fetch(`${API_URL}/goals`);
+          if (!response.ok) throw new Error('Ошибка загрузки нац. целей');
+          const data = await response.json();
+          setGoals(data);
+          if (step === 1) {
+            setStep(2);
+          }
+        } catch (error) {
+          console.error(error);
+        }
+      };
+      fetchGoals();
+    }
+  }, [selectedRegion, step]);
 
   useEffect(() => {
-    if (selectedGoal) { const fetchProjects = async () => { try { const response = await fetch(`${API_URL}/goals/${selectedGoal.id}/projects`); if (!response.ok) throw new Error('Ошибка загрузки проектов'); const data = await response.json(); setProjects(data); setStep(3); } catch (error) { console.error(error); } }; fetchProjects(); }
-  }, [selectedGoal]);
+    if (selectedGoal) {
+      const fetchProjects = async () => {
+        try {
+          const response = await fetch(`${API_URL}/goals/${selectedGoal.id}/projects`);
+          if (!response.ok) throw new Error('Ошибка загрузки проектов');
+          const data = await response.json();
+          setProjects(data);
+          if (step === 2) {
+            setStep(3);
+          }
+        } catch (error) {
+          console.error(error);
+        }
+      };
+      fetchProjects();
+    }
+  }, [selectedGoal, step]);
 
   useEffect(() => {
-    if (selectedRegion && selectedGoal && selectedProject) { const fetchProjectDetails = async () => { setIsLoading(true); setStep(4); try { const url = `${API_URL}/data?region_id=${selectedRegion.id}&goal_id=${selectedGoal.id}&project_id=${selectedProject.id}&year=${selectedYear}`; const response = await fetch(url); if (!response.ok) throw new Error('Ошибка загрузки детальной информации'); const data = await response.json(); setProjectDetails(data); } catch (error) { console.error(error); setProjectDetails(null); } finally { setIsLoading(false); } }; fetchProjectDetails(); }
+    // Этот хук будет автоматически перезапрашивать данные при смене любого фильтра
+    if (selectedRegion && selectedGoal && selectedProject) {
+      const fetchProjectDetails = async () => {
+        setIsLoading(true);
+        try {
+          const url = `${API_URL}/data?region_id=${selectedRegion.id}&goal_id=${selectedGoal.id}&project_id=${selectedProject.id}&year=${selectedYear}`;
+          const response = await fetch(url);
+          if (!response.ok) throw new Error('Ошибка загрузки детальной информации');
+          const data = await response.json();
+          setProjectDetails(data);
+          setStep(4);
+        } catch (error) {
+          console.error(error);
+          setProjectDetails(null);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      fetchProjectDetails();
+    }
   }, [selectedRegion, selectedGoal, selectedProject, selectedYear]);
 
-  const handleRegionSelect = (region) => { setSelectedRegion(region); setSelectedGoal(null); setSelectedProject(null); setProjects([]); };
-  const handleGoalSelect = (goal) => { setSelectedGoal(goal); setSelectedProject(null); };
-  const handleProjectSelect = (project) => { setSelectedProject(project); };
-  const handleYearChange = (year) => setSelectedYear(year);
-  const handleReset = () => { setStep(1); setIsLoading(false); setSelectedRegion(null); setSelectedGoal(null); setProjects([]); setSelectedProject(null); setProjectDetails(null); setSelectedYear(2024); };
+  // --- ИЗМЕНЕНИЕ: Упрощаем сброс при смене региона ---
+  const handleRegionSelect = (region) => {
+    // Просто обновляем регион. useEffect выше позаботится об остальном.
+    setSelectedRegion(region);
+  };
+
+  // Эта функция остается без изменений, т.к. проекты зависят от цели
+  const handleGoalSelect = (goal) => {
+    setSelectedGoal(goal);
+    setSelectedProject(null);
+    setProjects([]);
+    setProjectDetails(null);
+  };
+
+  const handleProjectSelect = (project) => {
+    setSelectedProject(project);
+  };
+  const handleYearChange = (year) => {
+    setSelectedYear(year);
+  };
+  const handleReset = () => {
+    setStep(1);
+    setIsLoading(false);
+    setSelectedRegion(null);
+    setSelectedGoal(null);
+    setGoals([]);
+    setProjects([]);
+    setSelectedProject(null);
+    setProjectDetails(null);
+    setSelectedYear(2024);
+  };
 
   return (
     <div className={styles.App}>
@@ -51,15 +125,13 @@ function App() {
           <img src={logo} alt="Логотип проекта" className={styles.logo} />
           <h1 className={styles.appTitle}>Анализ национальных целей</h1>
         </div>
-
-        {/* --- ИЗМЕНЕНИЕ ЗДЕСЬ: Добавлен блок с текстом --- */}
         <div className={styles.creditText}>
           Проект реализован Лабораторией ИИ г. Екатеринбург
         </div>
       </header>
 
       <main className={styles.mainContent}>
-        {step < 4 ? (
+        {step < 4 && !projectDetails ? (
           <div className={styles.stepContainer}>
             {step === 1 && ( <> <h2>Шаг 1. Выберите регион</h2> <RegionSelector regions={regions} onRegionSelect={handleRegionSelect} selectedRegion={selectedRegion} /> </> )}
             {step === 2 && ( <> <h2>Шаг 2. Выберите национальную цель</h2> <GoalSelector goals={goals} onGoalSelect={handleGoalSelect} selectedGoal={selectedGoal} /> </> )}
