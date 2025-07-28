@@ -1,12 +1,30 @@
 import pandas as pd
 from typing import Optional, List, Dict, Any, Tuple
 import re
+import html
 from datetime import date
 
 from app.core.database import get_db_pool
 from asyncpg import Connection
 
-
+# 1. Добавляем словарь для сопоставления имен
+NAME_MAPPING = {
+    'Младенческая смертность на 1 тыс. родившихся живыми': 'Младенческая смертность',
+    'Заболеваемость с впервые в жизни установленным диагнозом ВИЧ-инфекции на 100 тыс. человек населения': 'Заболеваемость ВИЧ, на 100 тыс. населения',
+    'Снижение суммарной продолжительности временной нетрудоспособности по заболеванию работающих лиц': 'Снижение суммарной продолжительности временной нетрудоспособности по заболеванию работающих граждан',
+    'Уровень удовлетворенности граждан работой государственных и муниципальных организаций культуры, искусства и народного творчества (Я5)': 'Уровень удовлетворенности граждан работой государственных и муниципальных организаций культуры, искусства и народного творчества',
+    'Улучшение качества среды для жизни в опорных населённых пунктах': 'Улучшение качества среды для жизни в опорных населенных пунктах',
+    '2.14.И.7.Количество благоустроенных общественных территорий, ед. (нарастающим итогом с 2025 г.)': 'Количество благоустроенных общественных территорий',
+    '2.14.И.8.Количество реализованных проектов победителей Всероссийского конкурса лучших проектов создания комфортной городской среды, ед. (нарастающим итогом с 2025 г.)': 'Количество реализованных проектов победителей Всероссийского конкурса лучших проектов создания комфортной городской среды',
+    'Численность населения, для которого улучшится качество предоставления коммунальных услуг (в сфере тепло-, водоснабжения и водоотведения), нарастающим итогом с 2025 года': 'Численность населения, для которого улучшится качество предоставления коммунальных услуг (в сфере тепло-, водоснабжения и водоотведения)',
+    'Количество построенных и реконструированных (модернизированных) объектов питьевого водоснабжения и водоподготовки, нарастающим итогом с 2019 года': 'Количество построенных и реконструированных (модернизированных) объектов питьевого водоснабжения и водоподготовки',
+    'Доля дорожной сети крупнейших городских агломераций, находящейся в нормативном состоянии': 'Доля дорожной сети крупнейших городских агломераций, находящейся в нормативном состоянии',
+    'Доля захораниваемых твердых коммунальных отходов в общей масе образованных твердых коммунальных отходов': 'Доля захораниваемых ТКО в общей массе образованных ТКО',
+    'Доля обрабатываемых твердых коммунальных отходов в общей массе образованных твердых коммунальных отходов': 'Доля обрабатываемых ТКО в общей массе образованных ТКО',
+    'Снижение объема неочищенных сточных вод, сбрасываемых в основные водные объекты': 'Объем неочищенных сточных вод, сбрасываемых в основные водные объекты',
+    'Достижение «цифровой зрелости» государственного и муниципального управления и ключевых отраслей социальной сферы, предполагающей автоматизацию большей части транзакций в рамках единых отраслевых цифровых платформ и модели управления на основе данных с учетом ускоренного внедрения технологий обработки больших объемов данных, машинного обучения и искусственного интеллекта': 'Достижение «цифровой зрелости» государственного и муниципального управления, ключевых отраслей экономики и социальной сферы, в том числе здравоохранения и образования, предполагающей автоматизацию большей части транзакций в рамках единых отраслевых цифровых платформ и модели управления на основе данных с учетом ускоренного внедрения технологий обработки больших объемов данных, машинного обучения и искусственного интеллекта',
+    'Доля государственных услуг и сервисов, по которым средняя оценка удовлетворенности качеством работы госслужащих и работников организаций социальной сферы по их оказанию в электронном виде с использованием ЕПГУ и (или) РПГУ выше 4,5': 'Доля государственных услуг и сервисов, по которым средняя оценка удовлетворенности качеством работы госслужащих и работников организаций соцсферы по их оказанию в электронном виде с использованием ЕПГУ и (или) РПГУ выше 4.5',
+}
 
 async def get_or_create_generic_id(conn: Connection, table_name: str, name: str, parent_id_column: str = None,
                                    parent_id: int = None) -> int:
@@ -43,43 +61,41 @@ async def save_parsed_data(
     if not original_indicator_name:
         raise ValueError("Имя индикатора отсутствует в метаданных.")
 
-    # --- НАЧАЛО ИЗМЕНЕНИЙ ---
+    # --- 2. ИЗМЕНЕНИЕ: Добавляем декодирование HTML-сущностей ---
+    decoded_name = html.unescape(original_indicator_name)
 
-    # 2. Очищаем имя от текста в скобках в конце строки
-    base_indicator_name = re.sub(r'\s*\([^)]*\)\s*$', '', original_indicator_name).strip()
+    cleaned_name = re.sub(r'\s*\([^)]*\)\s*$', '', decoded_name).strip()
+    base_indicator_name = ' '.join(cleaned_name.split())
+
+    db_search_name = NAME_MAPPING.get(base_indicator_name, base_indicator_name)
 
     print(f"Оригинальное имя: '{original_indicator_name}'")
-    if base_indicator_name != original_indicator_name:
-        print(f"Базовое имя для поиска: '{base_indicator_name}'")
-    else:
-        print("Базовое имя совпадает с оригинальным.")
+    if original_indicator_name != decoded_name:
+        print(f"Декодированное имя: '{decoded_name}'")
+    print(f"Базовое имя для поиска: '{base_indicator_name}'")
+    if db_search_name != base_indicator_name:
+        print(f"Найдено сопоставление! Имя для поиска в БД: '{db_search_name}'")
 
     async with pool.acquire() as conn:
         async with conn.transaction():
+            indicator_id = await conn.fetchval("SELECT id FROM indicators WHERE name = $1", db_search_name)
 
-            # 3. Ищем ID существующего индикатора сначала по БАЗОВОМУ имени
-            indicator_id = await conn.fetchval("SELECT id FROM indicators WHERE name = $1", base_indicator_name)
-
-            # 4. Если по базовому не нашли, на всякий случай ищем по полному имени
             if not indicator_id:
-                indicator_id = await conn.fetchval("SELECT id FROM indicators WHERE name = $1", original_indicator_name)
+                # На всякий случай ищем по полному декодированному имени
+                indicator_id = await conn.fetchval("SELECT id FROM indicators WHERE name = $1", decoded_name)
                 if not indicator_id:
                     raise ValueError(
-                        f"Индикатор с базовым названием '{base_indicator_name}' или полным '{original_indicator_name}' не найден в справочнике.")
+                        f"Индикатор с названием '{db_search_name}' или '{decoded_name}' не найден в справочнике.")
 
-            # 5. Обновляем метаданные у НАЙДЕННОГО индикатора
             await conn.execute("UPDATE indicators SET last_parsed_at = NOW() WHERE id = $1", indicator_id)
-            # --- КОНЕЦ ИЗМЕНЕНИЙ ---
 
             # ... (остальная часть функции для сохранения данных остается без изменений) ...
             if yearly_df is not None and not yearly_df.empty:
                 unique_regions_yr = yearly_df['region_name'].unique()
                 region_ids_yr = {name: await get_or_create_generic_id(conn, 'regions', name) for name in
                                  unique_regions_yr}
-
                 yearly_df['indicator_id'] = indicator_id
                 yearly_df['region_id'] = yearly_df['region_name'].map(region_ids_yr)
-
                 yearly_records = [tuple(x) for x in
                                   yearly_df[['indicator_id', 'region_id', 'year', 'yearly_value']].to_numpy()]
                 await conn.executemany(
@@ -90,15 +106,12 @@ async def save_parsed_data(
                     """,
                     yearly_records
                 )
-
             if monthly_df is not None and not monthly_df.empty:
                 unique_regions_mo = monthly_df['region_name'].unique()
                 region_ids_mo = {name: await get_or_create_generic_id(conn, 'regions', name) for name in
                                  unique_regions_mo}
-
                 monthly_df['indicator_id'] = indicator_id
                 monthly_df['region_id'] = monthly_df['region_name'].map(region_ids_mo)
-
                 monthly_records = [tuple(x) for x in
                                    monthly_df[['indicator_id', 'region_id', 'value_date', 'measured_value']].to_numpy()]
                 await conn.executemany(

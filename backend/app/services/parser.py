@@ -39,7 +39,7 @@ def find_filter_id_by_title(config: Dict[str, Any], keywords: list[str]) -> Opti
 async def fetch_all_indicator_data(client: httpx.AsyncClient, indicator_id: int, config: Dict[str, Any],
                                    source_url: str) -> Optional[Dict[str, Any]]:
     """Автоматически определяет все измерения для строк и столбцов и формирует payload."""
-    region_filter_id = find_filter_id_by_title(config, ["территори", "окато"])
+    region_filter_id = find_filter_id_by_title(config, ["территори", "окато", "оксм"])
     period_filter_id = find_filter_id_by_title(config, ["период"])
     year_filter_id = find_filter_id_by_title(config, ["год"])
 
@@ -73,7 +73,7 @@ async def fetch_all_indicator_data(client: httpx.AsyncClient, indicator_id: int,
 
 def process_api_response(api_data: Dict[str, Any], config: Dict[str, Any]) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """ФИНАЛЬНАЯ ВЕРСИЯ: Обрабатывает все известные структуры ответа API."""
-    region_filter_id = find_filter_id_by_title(config, ["территори", "окато"])
+    region_filter_id = find_filter_id_by_title(config, ["территори", "окато", "оксм"])
     period_filter_id = find_filter_id_by_title(config, ["период"])
 
     if not region_filter_id: return pd.DataFrame(), pd.DataFrame()

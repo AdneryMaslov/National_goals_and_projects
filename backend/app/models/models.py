@@ -113,3 +113,9 @@ class BudgetRecord(BaseModel):
     amount_executed: Optional[float] = None
     execution_percentage: Optional[float] = None
     relevance_date: date
+
+class NewsSyncResponse(BaseModel):
+    message: str
+    records_processed: int
+    records_added: int
+    records_updated: int

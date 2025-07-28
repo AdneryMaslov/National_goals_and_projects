@@ -5,3 +5,4 @@ pydantic-settings
 pandas
 httpx
 tabulate
+python-multipart

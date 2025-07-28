@@ -1,6 +1,4 @@
-# app/api/endpoints.py
-
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, UploadFile, File
 from typing import List, Optional
 from tabulate import tabulate
 import datetime
@@ -9,10 +7,11 @@ import pandas as pd
 from app.models.models import (
     Region, Goal, Project, ProjectDetails, BudgetItem, MetricData, IndicatorData, ProjectParameter,
     ParseRequest, ParseResponse, IndicatorHistory, TimeSeriesDataPoint, ReferenceDataPoint, ProjectActivity,
-    BudgetSyncResponse, ProjectBudgetHistory
+    BudgetSyncResponse, ProjectBudgetHistory, NewsSyncResponse
 )
 from app.core.database import get_db_pool
 from app.services.parser import get_indicator_data_from_url
+from app.services.news_importer import import_news_from_upload
 from app.services.db_manager import save_parsed_data
 from app.services.budget_parser import fetch_budget_data
 from app.services.db_manager import save_parsed_data, save_budget_data
@@ -33,42 +32,42 @@ async def process_indicator_endpoint(request: ParseRequest):
     print(f"Спарсены метаданные для: '{metadata['name']}'")
 
     # -- Заглушка для проверки парсера --
-    monthly_rows_count = len(monthly_df) if monthly_df is not None else 0
-    yearly_rows_count = len(yearly_df) if yearly_df is not None else 0
-
-    print("\n--- РЕЗУЛЬТАТЫ ПАРСИНГА (без сохранения в БД) ---")
-
-    if yearly_rows_count > 0:
-        print("\n[+] Годовые данные:")
-        # Выводим первые 5 строк для предпросмотра
-        print(tabulate(yearly_df.head(), headers='keys', tablefmt='psql'))
-        if yearly_rows_count > 5:
-            print(f"... и еще {yearly_rows_count - 5} строк.")
-    else:
-        print("\n[-] Годовые данные не найдены.")
-
-    if monthly_rows_count > 0:
-        print("\n[+] Месячные данные:")
-        # Выводим первые 5 строк для предпросмотра
-        print(tabulate(monthly_df.head(), headers='keys', tablefmt='psql'))
-        if monthly_rows_count > 5:
-            print(f"... и еще {monthly_rows_count - 5} строк.")
-    else:
-        print("\n[-] Месячные данные не найдены.")
-
-    print("\n--- Конец результатов ---")
+    # monthly_rows_count = len(monthly_df) if monthly_df is not None else 0
+    # yearly_rows_count = len(yearly_df) if yearly_df is not None else 0
+    #
+    # print("\n--- РЕЗУЛЬТАТЫ ПАРСИНГА (без сохранения в БД) ---")
+    #
+    # if yearly_rows_count > 0:
+    #     print("\n[+] Годовые данные:")
+    #     # Выводим первые 5 строк для предпросмотра
+    #     print(tabulate(yearly_df.head(), headers='keys', tablefmt='psql'))
+    #     if yearly_rows_count > 5:
+    #         print(f"... и еще {yearly_rows_count - 5} строк.")
+    # else:
+    #     print("\n[-] Годовые данные не найдены.")
+    #
+    # if monthly_rows_count > 0:
+    #     print("\n[+] Месячные данные:")
+    #     # Выводим первые 5 строк для предпросмотра
+    #     print(tabulate(monthly_df.head(), headers='keys', tablefmt='psql'))
+    #     if monthly_rows_count > 5:
+    #         print(f"... и еще {monthly_rows_count - 5} строк.")
+    # else:
+    #     print("\n[-] Месячные данные не найдены.")
+    #
+    # print("\n--- Конец результатов ---")
 
     # --- Возвращаем сохранение в БД ---
-    # try:
-    #     await save_parsed_data(
-    #         metadata=metadata,
-    #         monthly_df=monthly_df,
-    #         yearly_df=yearly_df
-    #     )
-    # except Exception as e:
-    #     # Ловим и выводим как ошибки парсинга, так и ошибки сохранения
-    #     print(f"Критическая ошибка: {e}")
-    #     raise HTTPException(status_code=500, detail=f"Ошибка обработки или сохранения: {str(e)}")
+    try:
+        await save_parsed_data(
+            metadata=metadata,
+            monthly_df=monthly_df,
+            yearly_df=yearly_df
+        )
+    except Exception as e:
+        # Ловим и выводим как ошибки парсинга, так и ошибки сохранения
+        print(f"Критическая ошибка: {e}")
+        raise HTTPException(status_code=500, detail=f"Ошибка обработки или сохранения: {str(e)}")
 
     return ParseResponse(
         message="Данные успешно спарсены и сохранены",
@@ -341,3 +340,38 @@ async def get_indicator_history(indicator_id: int, region_id: int):
             monthly_data=[TimeSeriesDataPoint(**dict(rec)) for rec in monthly_records],
             reference_data=[ReferenceDataPoint(**dict(rec)) for rec in reference_records]
         )
+
+
+@router.post("/news/sync", response_model=NewsSyncResponse, tags=["Parser"])
+async def sync_news(file: UploadFile = File(...)):
+    """
+    Запускает процесс импорта новостей из загруженного JSON-файла.
+    """
+    print("--- Начинаем импорт новостей через API из загруженного файла ---")
+    try:
+        # Проверяем, что загружен JSON-файл
+        if not file.filename.endswith('.json'):
+            raise HTTPException(status_code=400, detail="Неверный формат файла. Пожалуйста, загрузите .json файл.")
+
+        pool = await get_db_pool()
+        if not pool:
+            raise HTTPException(status_code=503, detail="База данных не подключена.")
+
+        # Читаем содержимое файла
+        contents = await file.read()
+
+        # Передаем содержимое в наш сервис
+        processed, added, updated = await import_news_from_upload(pool, contents)
+
+        print(f"--- Импорт новостей завершен: обработано {processed}, добавлено {added}, обновлено {updated} ---")
+        return NewsSyncResponse(
+            message="Синхронизация новостей успешно завершена.",
+            records_processed=processed,
+            records_added=added,
+            records_updated=updated
+        )
+    except json.JSONDecodeError:
+         raise HTTPException(status_code=400, detail="Не удалось прочитать JSON. Файл поврежден или имеет неверную структуру.")
+    except Exception as e:
+        print(f"Критическая ошибка во время импорта новостей: {e}")
+        raise HTTPException(status_code=500, detail=f"Внутренняя ошибка сервера: {str(e)}")
